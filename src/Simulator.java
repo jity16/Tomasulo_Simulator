@@ -3,6 +3,7 @@ public class Simulator {
 	//参数设置
 	final int CAddNum = 3, CMultNum = 2, CLoadNum = 2;
 	final int AddRsNum = 6, MultRsNum = 3, LoadRsNum = 3;
+	final int RegisterNum = 32;
 	//运算器部件
 	Calculator[] cadds;
 	Calculator[] cmults;
@@ -11,6 +12,8 @@ public class Simulator {
 	ReserveStation[] addRs;
 	ReserveStation[] multRs;
 	LoadBuffer[] loadBuffers;
+	//寄存器状态表
+	RegisterStatus[] registers;
 	
 	Simulator(){
 		//实例化运算器部件
@@ -21,6 +24,8 @@ public class Simulator {
 		this.addRs = new ReserveStation[AddRsNum];
 		this.multRs = new ReserveStation[MultRsNum];
 		this.loadBuffers = new LoadBuffer[LoadRsNum];
+		//实例化寄存器状态表
+		this.registers = new RegisterStatus[RegisterNum];
 		
 	}
 	
@@ -87,4 +92,23 @@ class LoadBuffer{
 		this.issueTime = -1;
 	}
 }
+
+
+/*寄存器状态类：RegisterStatus 
+ * 32个寄存器（F0-F31）
+ */
+class RegisterStatus{
+    String stateFunc;	//寄存器状态	
+    int value;			//寄存器数值
+    
+    boolean isWaiting;
+    
+    RegisterStatus(){
+        stateFunc = null;
+        value = 0;
+        isWaiting = false;
+    }
+}
+
+
 
