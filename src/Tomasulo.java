@@ -60,6 +60,7 @@ public class Tomasulo {
 //    	}
     	tomasuloSimulator = new Simulator();
     	//To do
+    	tomasuloSimulator.runSimulator(inst);
     }
 }
 

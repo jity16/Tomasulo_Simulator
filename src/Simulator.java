@@ -15,6 +15,12 @@ public class Simulator {
 	//寄存器状态表
 	RegisterStatus[] registers;
 	
+	
+	Instruction[] inst;	//指令集序列
+	boolean hasJump;			
+    int nextInstIndex;	//下一条指令的序号
+    int clock;			//时钟
+    
 	Simulator(){
 		//实例化运算器部件
 		this.cadds = new Calculator[CAddNum];
@@ -26,7 +32,16 @@ public class Simulator {
 		this.loadBuffers = new LoadBuffer[LoadRsNum];
 		//实例化寄存器状态表
 		this.registers = new RegisterStatus[RegisterNum];
-		
+		//初始化其余成员变量
+		inst = null;
+		hasJump = false;
+		nextInstIndex = 0;
+		clock = 0;
+	}
+	
+	public void runSimulator(Instruction[] inst) {
+		this.inst = inst;
+		//System.out.println(inst[0].OprType);
 	}
 	
 	
