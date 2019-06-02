@@ -3,7 +3,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Tomasulo {
-	static List<String> instList = new ArrayList<>();	//读入的指令集序列
+	static List<String> StrInstList = new ArrayList<>();	//读入的指令集序列
 	public static void readFile() {	//读取测试文件指令集
         String pathname = "test/test2.nel"; 
         try (FileReader reader = new FileReader(pathname);
@@ -13,7 +13,7 @@ public class Tomasulo {
             String line;
             while ((line = br.readLine()) != null) {
                 //System.out.println(line);
-            	instList.add(line);
+            	StrInstList.add(line);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -23,15 +23,41 @@ public class Tomasulo {
     public static void main(String []args){
     	readFile();
     	//输出待执行的指令集序列
-    	for(int i = 0; i < instList.size(); i++) {
-    		System.out.println(i+" "+instList.get(i));
+    	for(int i = 0; i < StrInstList.size(); i++) {
+    		System.out.println(i+" "+StrInstList.get(i));
     	}
     	//输出语法定义CFG
-    	for(int i = 0; i < instList.size(); i++) {
-	    	String[] testOpr = instList.get(i).split(",");
-	    	//System.out.println(testOpr[0]);
-	    	Instruction inst = new Instruction(testOpr[0]);
-	    	inst.PrintInst();
+    	Instruction[] inst = new Instruction[StrInstList.size()];
+    	for(int i = 0; i < StrInstList.size();i ++) {
+    		String[] instArray = StrInstList.get(i).split(",");
+    		//System.out.println("instArray"+" "+instArray[0]);
+    		switch(instArray[0]) {
+	    		case "LD":
+	    			inst[i] = new LoadInstruction(instArray);
+	    			break;
+	    		case "ADD":
+	    		case "SUB":
+	    		case "MUL":
+	    		case "DIV":
+	    			inst[i] = new CalInstruction(instArray);
+	    			break;
+	    		case "JUMP":
+	    			inst[i] = new JumpInstruction(instArray);
+	    			break;
+    			default:
+    				System.out.println("Input Error:Unknown Operation Type!");
+    		}
+    		//inst[i].Opr = inst[i].getType(instArray[0]);
+    		//System.out.println(i +" "+ inst[i].Opr);
     	}
+//    	for(int i = 0; i < StrInstList.size(); i ++ ) {
+//    		//System.out.println(i +" "+ inst[i].Opr);
+//    		if(inst[i].Opr == OperationType.LD) {
+//    			LoadInstruction load = (LoadInstruction)inst[i];
+//    			System.out.println(load.Opr+" "+load.registerNo+" "+load.loadAddr);
+//    		}
+//    	}
     }
 }
+
+
