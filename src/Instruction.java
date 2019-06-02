@@ -1,5 +1,5 @@
 public class Instruction {
-	public OperationType Opr;
+	public OperationType OprType;
 	public int issue,exec,write;
 	Instruction(){
 	}
@@ -9,28 +9,34 @@ public class Instruction {
 		this.write = -1;
 		switch(opr) {
 			case "LD":
-				this.Opr = OperationType.LD;
+				this.OprType = OperationType.LD;
 				break;
 			case "ADD":
-				this.Opr = OperationType.ADD;
+				this.OprType = OperationType.ADD;
 				break;
 			case "SUB":
-				this.Opr = OperationType.SUB;
+				this.OprType = OperationType.SUB;
 				break;
 			case "MUL":
-				this.Opr = OperationType.MUL;
+				this.OprType = OperationType.MUL;
 				break;
 			case "DIV":
-				this.Opr = OperationType.DIV;
+				this.OprType = OperationType.DIV;
 				break;
 			case "JUMP":
-				this.Opr = OperationType.JUMP;
+				this.OprType = OperationType.JUMP;
 				break;
 			default:
 		}
 	}
+	public void setType(OperationType opr) {
+		this.OprType = opr;
+	}
+	public OperationType getType() {
+		return this.OprType;
+	}
 	public void PrintInst() {
-		System.out.println(Opr);
+		System.out.println(this.OprType);
 	}
 }
 class LoadInstruction extends Instruction {

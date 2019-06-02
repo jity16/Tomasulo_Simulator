@@ -4,8 +4,9 @@ import java.util.List;
 
 public class Tomasulo {
 	static List<String> StrInstList = new ArrayList<>();	//读入的指令集序列
+	static Simulator tomasuloSimulator = new Simulator();			//TomasuloSimulator
 	public static void readFile() {	//读取测试文件指令集
-        String pathname = "test/test2.nel"; 
+        String pathname = "test/test0.nel"; 
         try (FileReader reader = new FileReader(pathname);
              BufferedReader br = new BufferedReader(reader)
         ) {
@@ -52,11 +53,13 @@ public class Tomasulo {
     	}
 //    	for(int i = 0; i < StrInstList.size(); i ++ ) {
 //    		//System.out.println(i +" "+ inst[i].Opr);
-//    		if(inst[i].Opr == OperationType.LD) {
+//    		if(inst[i].OprType == OperationType.LD) {
 //    			LoadInstruction load = (LoadInstruction)inst[i];
-//    			System.out.println(load.Opr+" "+load.registerNo+" "+load.loadAddr);
+//    			System.out.println(load.OprType+" "+load.registerNo+" "+load.loadAddr);
 //    		}
 //    	}
+    	tomasuloSimulator = new Simulator();
+    	//To do
     }
 }
 
