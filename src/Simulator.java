@@ -44,15 +44,14 @@ public class Simulator {
 	public void runSimulator(Instruction[] inst) {
 		this.inst = inst;
 		//System.out.println(inst[0].OprType);
-		while(!isFinished()){
+		while(true){
 			//计时器
 			clock ++;
 			System.out.println("-----------"+"Clock: "+clock+"-----------");
 			issue();
 			exec();
 			write();
-			//System.out.println("nextInstIndex: "+nextInstIndex);
-			//System.out.println("curInst: "+ inst[curInstIndex].OprType);
+			if(isFinished()) break;
 		}
 	}
 	
@@ -64,24 +63,27 @@ public class Simulator {
         System.out.println("Issue new instruction: Index = "+nextInstIndex+" Type = "+nextInstruction.OprType);
         switch (nextInstruction.OprType){
             case LD:
-            	IssueLoadBuffer(nextInstruction);
+            	if(IssueLoadBuffer(nextInstruction)){//success
+                    nextInstIndex++;
+                }
+//            	IssueLoadBuffer(nextInstruction);
                 break;
             case ADD:
             case SUB:
-            	nextInstIndex ++;
+            	nextInstIndex++;
                 break;
             case MUL:
             case DIV:
-            	nextInstIndex ++;
+                nextInstIndex++;
                 break;
             case JUMP:
-            	nextInstIndex ++;
+                nextInstIndex++;
                 break;
         }
 	}
 	
-	public void IssueLoadBuffer(Instruction instruction){
-        nextInstIndex ++;
+	public boolean IssueLoadBuffer(Instruction instruction){
+        return true;
     }
 	
 	public void exec() {
@@ -123,7 +125,7 @@ class ReserveStation{
 	Instruction instruction;	//指令信息
 	
 	boolean isBusy;				//当前保留站是否被占用
-	//OperationType operation;	//当前操作指令类型
+	OperationType operation;	//当前操作指令类型
     String Qj, Qk;				//保留站字段
     int Vj, Vk;					//保留站字段
     

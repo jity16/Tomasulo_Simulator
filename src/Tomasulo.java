@@ -1,5 +1,7 @@
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class Tomasulo {
@@ -62,6 +64,9 @@ public class Tomasulo {
     	tomasuloSimulator = new Simulator();
     	//To do
     	tomasuloSimulator.runSimulator(inst);
+    	//为了防止编译运行不是新更新的版本,打上时间戳
+    	SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置时间格式
+        System.out.println("current system time : " +df.format(new Date()));// new Date()为获取当前系统时间
     }
 }
 
