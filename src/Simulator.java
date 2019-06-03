@@ -1,3 +1,5 @@
+import static java.lang.System.in;
+import static java.lang.System.load;
 
 public class Simulator {
 	//参数设置
@@ -27,12 +29,35 @@ public class Simulator {
 		this.cadds = new Calculator[CAddNum];
 		this.cmults = new Calculator[CMultNum];
 		this.cloads = new Calculator[CLoadNum];
+		for (int i = 0; i < CAddNum; i++) {
+        	cadds[i] = new Calculator();
+        }
+        
+        for (int i = 0; i < CMultNum; i++) {
+        	cmults[i] = new Calculator();
+        }
+        
+        for (int i = 0; i < CLoadNum; i++) {
+            cloads[i] = new Calculator();
+        }
 		//实例化保留站
 		this.addRs = new ReserveStation[AddRsNum];
 		this.multRs = new ReserveStation[MultRsNum];
 		this.loadBuffers = new LoadBuffer[LoadRsNum];
+        for (int i = 0; i < AddRsNum; i++) {
+            addRs[i] = new ReserveStation();
+        }
+        for (int i = 0; i < MultRsNum; i++) {
+            multRs[i] = new ReserveStation();
+        }
+        for (int i = 0; i < LoadRsNum; i++) {
+            loadBuffers[i] = new LoadBuffer();
+        }
 		//实例化寄存器状态表
 		this.registers = new RegisterStatus[RegisterNum];
+		for (int i = 0; i < RegisterNum; i++) {
+            registers[i] = new RegisterStatus();
+        }
 		//初始化其余成员变量
 		inst = null;
 		hasJump = false;
