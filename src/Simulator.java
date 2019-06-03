@@ -18,6 +18,7 @@ public class Simulator {
 	
 	Instruction[] inst;	//指令集序列
 	boolean hasJump;			
+	int curInstIndex;	//当前指令的序号
     int nextInstIndex;	//下一条指令的序号
     int clock;			//时钟
     
@@ -35,21 +36,29 @@ public class Simulator {
 		//初始化其余成员变量
 		inst = null;
 		hasJump = false;
-		nextInstIndex = 0;
+		curInstIndex = 0;
+		nextInstIndex = 1;
 		clock = 0;
 	}
 	
 	public void runSimulator(Instruction[] inst) {
 		this.inst = inst;
 		//System.out.println(inst[0].OprType);
-		while(!isFininshed()) {
+		while(!isFinished()){
+			//计时器
+			clock ++;
+			System.out.println("Clock: "+clock);
 			issue();
 			exec();
 			write();
+			System.out.println("curInstIndex: "+curInstIndex);
+			System.out.println("curInst: "+ inst[curInstIndex].OprType);
 		}
 	}
+	
 	public void issue() {
-		
+		curInstIndex ++;
+		nextInstIndex ++;
 	}
 	public void exec() {
 		
@@ -57,9 +66,12 @@ public class Simulator {
 	public void write() {
 		
 	}
-	public boolean isFininshed() {
-		return true;
+	public boolean isFinished() {
+		if(nextInstIndex > inst.length - 1)
+			return true;
+		return false;
 	}
+
 }
 
 /*运算器类 Calculator
