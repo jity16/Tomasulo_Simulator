@@ -18,8 +18,8 @@ public class Simulator {
 	
 	Instruction[] inst;	//指令集序列
 	boolean hasJump;			
-	int curInstIndex;	//当前指令的序号
-    int nextInstIndex;	//下一条指令的序号
+	//int curInstIndex;	//当前指令的序号
+    int nextInstIndex;	//下一条待发射指令的序号
     int clock;			//时钟
     
 	Simulator(){
@@ -36,8 +36,8 @@ public class Simulator {
 		//初始化其余成员变量
 		inst = null;
 		hasJump = false;
-		curInstIndex = 0;
-		nextInstIndex = 1;
+//		curInstIndex = 0;
+		nextInstIndex = 0;
 		clock = 0;
 	}
 	
@@ -47,19 +47,43 @@ public class Simulator {
 		while(!isFinished()){
 			//计时器
 			clock ++;
-			System.out.println("Clock: "+clock);
+			System.out.println("-----------"+"Clock: "+clock+"-----------");
 			issue();
 			exec();
 			write();
-			System.out.println("curInstIndex: "+curInstIndex);
-			System.out.println("curInst: "+ inst[curInstIndex].OprType);
+			//System.out.println("nextInstIndex: "+nextInstIndex);
+			//System.out.println("curInst: "+ inst[curInstIndex].OprType);
 		}
 	}
 	
 	public void issue() {
-		curInstIndex ++;
-		nextInstIndex ++;
+//		curInstIndex ++;
+//		nextInstIndex ++;
+//		Instruction curInstruction = inst[nextInstIndex];
+        Instruction nextInstruction = inst[nextInstIndex];
+        System.out.println("Issue new instruction: Index = "+nextInstIndex+" Type = "+nextInstruction.OprType);
+        switch (nextInstruction.OprType){
+            case LD:
+            	IssueLoadBuffer(nextInstruction);
+                break;
+            case ADD:
+            case SUB:
+            	nextInstIndex ++;
+                break;
+            case MUL:
+            case DIV:
+            	nextInstIndex ++;
+                break;
+            case JUMP:
+            	nextInstIndex ++;
+                break;
+        }
 	}
+	
+	public void IssueLoadBuffer(Instruction instruction){
+        nextInstIndex ++;
+    }
+	
 	public void exec() {
 		
 	}

@@ -24,6 +24,7 @@ public class Tomasulo {
     public static void main(String []args){
     	readFile();
     	//输出待执行的指令集序列
+    	System.out.println("-----------"+"Instructions"+"-----------");
     	for(int i = 0; i < StrInstList.size(); i++) {
     		System.out.println(i+" "+StrInstList.get(i));
     	}
