@@ -42,9 +42,24 @@ public class Simulator {
 	public void runSimulator(Instruction[] inst) {
 		this.inst = inst;
 		//System.out.println(inst[0].OprType);
+		while(!isFininshed()) {
+			issue();
+			exec();
+			write();
+		}
 	}
-	
-	
+	public void issue() {
+		
+	}
+	public void exec() {
+		
+	}
+	public void write() {
+		
+	}
+	public boolean isFininshed() {
+		return true;
+	}
 }
 
 /*运算器类 Calculator
