@@ -86,7 +86,7 @@ public class Simulator {
 //		nextInstIndex ++;
 //		Instruction curInstruction = inst[nextInstIndex];
         Instruction nextInstruction = inst[nextInstIndex];
-        System.out.println("Issue new instruction: Index = "+nextInstIndex+" Type = "+nextInstruction.OprType);
+//        System.out.println("Issue new instruction: Index = "+nextInstIndex+" Type = "+nextInstruction.OprType);
         switch (nextInstruction.OprType){
             case LD:
             	IssueLoad(nextInstruction);
@@ -189,7 +189,25 @@ public class Simulator {
 		
 	}
 	public void write() {
-		
+		/*Write Load
+		 *  (1)寻找当前周期运行结束的指令
+		 *  (2)更新运算资源的信息
+		 *  (3)更新寄存器状态表信息
+		 */
+		for(int i = 0; i < CLoadNum; i ++) {
+			if(cloads[i].isBusy && cloads[i].remainRunTime == 1) {
+				//更新运算资源的信息
+				cloads[i].isBusy = false;
+				cloads[i].cloadBuffer.isBusy = false;
+				cloads[i].cloadBuffer.isExec = false;
+				cloads[i].cloadBuffer.writeTime = clock;
+				cloads[i].cloadBuffer = null;
+				cloads[i].remainRunTime = 0;
+				if(cloads[i].instruction.write == -1)
+                    cloads[i].instruction.write = clock;
+				System.out.println("Write Issue: Load"+ ((LoadInstruction)cloads[i].instruction).registerNo + " result = "+ cloads[i].result);
+			}
+		}
 	}
 	public boolean isFinished() {
 		if(nextInstIndex > inst.length - 1)
@@ -258,12 +276,14 @@ class LoadBuffer{
 	boolean isBusy;				//当前保留站是否被占用
 	boolean isExec;				//当前保留站的指令是否被运行
 	int issueTime;				//指令发射时间
+	int writeTime;				//指令写回时间
 //	int address;				//写入的寄存器地址
 	
 	LoadBuffer(){
 		this.isBusy = false;
 		this.isExec = false;
 		this.issueTime = -1;
+		this.writeTime = -1;
 	}
 }
 
