@@ -6,6 +6,7 @@ public class Simulator {
 	final int CAddNum = 3, CMultNum = 2, CLoadNum = 2;
 	final int AddRsNum = 6, MultRsNum = 3, LoadRsNum = 3;
 	final int RegisterNum = 32;
+	final int LDTime = 3, ADDTime = 3, MULTime = 12, DIVTime = 40, JUMPTime = 1;
 	//运算器部件
 	Calculator[] cadds;
 	Calculator[] cmults;
@@ -139,6 +140,52 @@ public class Simulator {
     }
 	
 	public void exec() {
+		/*Exec Load 
+		 * 1. 更新已被占用的运算器资源信息
+		 * 2.如果有剩余运算器资源
+		 *  2.1取最先就绪的指令
+		 */
+		int cLoadAvailable = CLoadNum;
+		for(int i = 0; i < CLoadNum; i ++) {
+			if(cloads[i].isBusy) {	//被占用的运算器
+				cloads[i].remainRunTime --;
+				if(cloads[i].remainRunTime == 1 && cloads[i].instruction.exec == -1)//在本周期第一次被执行完毕
+                    cloads[i].instruction.exec = clock;
+                cLoadAvailable--;
+			}
+		}
+		while(cLoadAvailable != 0) { //有剩余运算器资源
+            boolean LoadReady = false;
+            int execLoadIndex = -1;
+            int earlytime = Integer.MAX_VALUE;
+            for (int i = 0; i < LoadRsNum; i++) { 	//取最先就绪的指令
+                if (loadBuffers[i].isBusy && !loadBuffers[i].isExec && loadBuffers[i].issueTime < earlytime && loadBuffers[i].issueTime != clock){
+                	LoadReady = true;				//存在就绪的Load
+                	execLoadIndex = i;
+                    earlytime = loadBuffers[i].issueTime;
+                }
+            }
+            if(LoadReady){					//指令序列中有就绪的Load
+            	cLoadAvailable--;			//占用运算器资源
+                for (int i = 0; i < CLoadNum; i++) {
+                    if(!cloads[i].isBusy){	//占用空闲运算器i
+                    	//更新运算器i的信息
+                        cloads[i].remainRunTime = LDTime;
+                        cloads[i].isBusy = true;
+                        cloads[i].instruction = loadBuffers[execLoadIndex].instruction;
+                        cloads[i].result = ((LoadInstruction)cloads[i].instruction).loadAddr;
+                        System.out.println("Start Exec Load: loadBuffer "+execLoadIndex+" cLoad "+i+" loadAddr = "+cloads[i].result);
+                        //更新LoadBuffer信息
+                        loadBuffers[execLoadIndex].isExec = true;
+                        //关联cload 和LoadBuffer
+                        cloads[i].cloadBuffer = loadBuffers[execLoadIndex];
+                        break;
+                    }
+                }
+            }
+            else
+                break;
+        }
 		
 	}
 	public void write() {
@@ -162,10 +209,13 @@ class Calculator{
     int remainRunTime;		 //剩余运行时间
     boolean isBusy;			 //当前运算器是否被占用
     int result;				 //指令运行结果
+    LoadBuffer cloadBuffer;	 //若为Load指令所占用的LoadBuffer	
+    	
     Calculator(){
     	remainRunTime = 41;
         isBusy = false;
         result = 0;
+        cloadBuffer = null;
     }
 }
 
@@ -177,10 +227,11 @@ class ReserveStation{
 	Instruction instruction;	//指令信息
 	
 	boolean isBusy;				//当前保留站是否被占用
+	boolean isExec;				//当前保留站的指令是否被运行
 	OperationType operation;	//当前操作指令类型
     String Qj, Qk;				//保留站字段
     int Vj, Vk;					//保留站字段
-    
+
 	boolean isReady;	//当前操作数是否均就绪
 	int issueTime;		//指令流出时间
     int readyTime;		//操作数就绪时间
@@ -191,6 +242,7 @@ class ReserveStation{
         this.issueTime = -1;
         this.readyTime = 0;
         this.isBusy = false;
+        this.isExec = false;
         this.isReady = false;
         this.Qj =this.Qk = null;
         this.Vj = this.Vk = 0;
@@ -204,11 +256,13 @@ class LoadBuffer{
 	Instruction instruction;	//指令信息
 	
 	boolean isBusy;				//当前保留站是否被占用
+	boolean isExec;				//当前保留站的指令是否被运行
 	int issueTime;				//指令发射时间
 //	int address;				//写入的寄存器地址
 	
 	LoadBuffer(){
 		this.isBusy = false;
+		this.isExec = false;
 		this.issueTime = -1;
 	}
 }
