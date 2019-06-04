@@ -193,6 +193,7 @@ public class Simulator {
 		 *  (1)寻找当前周期运行结束的指令
 		 *  (2)更新运算资源的信息
 		 *  (3)更新寄存器状态表信息
+		 *  (4)更新保留站信息
 		 */
 		for(int i = 0; i < CLoadNum; i ++) {
 			if(cloads[i].isBusy && cloads[i].remainRunTime == 1) {
@@ -206,8 +207,20 @@ public class Simulator {
 				if(cloads[i].instruction.write == -1)
                     cloads[i].instruction.write = clock;
 				System.out.println("Write Issue: Load"+ ((LoadInstruction)cloads[i].instruction).registerNo + " result = "+ cloads[i].result);
+				
+				String finishLoad = "loader" + Integer.toString(i);
+				int LoadResult = cloads[i].result;
+				//更新寄存器状态表
+				upDateRegisters(LoadResult,finishLoad);
 			}
 		}
+	}
+	
+	//指令写回,更新寄存器状态表
+	public void upDateRegisters(int result, String finishInst) {
+		for(int i = 0; i < RegisterNum;i ++) {
+			
+		}		
 	}
 	public boolean isFinished() {
 		if(nextInstIndex > inst.length - 1)
