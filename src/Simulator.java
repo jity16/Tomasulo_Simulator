@@ -88,10 +88,7 @@ public class Simulator {
         System.out.println("Issue new instruction: Index = "+nextInstIndex+" Type = "+nextInstruction.OprType);
         switch (nextInstruction.OprType){
             case LD:
-            	if(IssueLoadBuffer(nextInstruction)){//success
-                    nextInstIndex++;
-                }
-//            	IssueLoadBuffer(nextInstruction);
+            	IssueLoad(nextInstruction);
                 break;
             case ADD:
             case SUB:
@@ -107,8 +104,38 @@ public class Simulator {
         }
 	}
 	
-	public boolean IssueLoadBuffer(Instruction instruction){
-        return true;
+	/* Issue Load
+     * 1.遍历保留站,寻找空闲保留站,流出指令
+     * 2.更新保留站信息
+     * 3.更新指令信息(issue)
+     * 4.更新状态寄存器信息
+     * 5.更新nextInstIndex
+     */
+	public void IssueLoad(Instruction instruction){
+        int loadBufferIndex = -1;
+        for(int i = 0; i < LoadRsNum;i ++) {
+        	if(!loadBuffers[i].isBusy) {	//有空闲LoadBuffer
+        		loadBufferIndex = i;		//占用该空闲保留站
+        		break;
+        	}
+        }
+        if(loadBufferIndex == -1) return;	//无空闲LoadBuffer
+        //更新LoadBuffer
+        loadBuffers[loadBufferIndex].instruction = instruction;
+        loadBuffers[loadBufferIndex].isBusy = true;
+        loadBuffers[loadBufferIndex].issueTime = clock; 
+        //更新指令信息(第一次发射的时间)
+        if(instruction.issue == -1) { //指令从未发射过
+        	instruction.issue = clock;
+        }
+        LoadInstruction loadInst = (LoadInstruction)instruction;
+        System.out.println("Issue Load: "+ loadInst.OprType +" F"+loadInst.registerNo+" "+loadInst.loadAddr);
+        //更新状态寄存器
+        registers[loadInst.registerNo].stateFunc = "loadBuffer"+Integer.toString(loadBufferIndex);
+        registers[loadInst.registerNo].isWaiting = true;
+        //更新nextInstIndex
+        nextInstIndex ++;
+        return;
     }
 	
 	public void exec() {
