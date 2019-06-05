@@ -71,13 +71,13 @@ public class Simulator {
 		this.inst = inst;
 		//System.out.println(inst[0].OprType);
 		while(true){
+			if(isFinished()) break;
 			//计时器
 			clock ++;
 			System.out.println("-----------"+"Clock: "+clock+"-----------");
-			issue();
-			exec();
 			write();
-			if(isFinished()) break;
+			exec();
+			issue();		
 		}
 	}
 	
@@ -219,7 +219,13 @@ public class Simulator {
 	//指令写回,更新寄存器状态表
 	public void upDateRegisters(int result, String finishInst) {
 		for(int i = 0; i < RegisterNum;i ++) {
-			
+			//寻找匹配的并等待写回的寄存器
+			if(registers[i].isWaiting && registers[i].stateFunc.contentEquals(finishInst)) {
+				registers[i].isWaiting = false;
+				registers[i].stateFunc = null;
+				registers[i].value = result;
+				System.out.println("Register "+ i + " value = "+registers[i].value);
+			}
 		}		
 	}
 	public boolean isFinished() {
@@ -308,7 +314,7 @@ class RegisterStatus{
     String stateFunc;	//寄存器状态	
     int value;			//寄存器数值
     
-    boolean isWaiting;
+    boolean isWaiting;	//是否在等待执行写回
     
     RegisterStatus(){
         stateFunc = null;
