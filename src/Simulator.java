@@ -212,6 +212,8 @@ public class Simulator {
 				int LoadResult = cloads[i].result;
 				//更新寄存器状态表
 				upDateRegisters(LoadResult,finishLoad);
+				//更新保留站
+				upDateReservation(LoadResult,finishLoad);
 			}
 		}
 	}
@@ -228,6 +230,47 @@ public class Simulator {
 			}
 		}		
 	}
+	
+	//指令写回,更新保留站
+	public void upDateReservation(int result , String finishInst) {
+		//更新加减法保留站
+		for(int i = 0; i < AddRsNum; i ++) {
+			if(addRs[i].isBusy &&(addRs[i].Qj != null || addRs[i].Qk != null)) { //操作数等待就绪的指令
+				if((addRs[i].Qj).equals(finishInst)) {	//等待该结果作为第一操作数的保留站
+					addRs[i].Vj = result;
+					addRs[i].Qj = null;
+				}
+				if((addRs[i].Qk).equals(finishInst)) { //等待该结果作为第二操作数的保留站
+					addRs[i].Vk = result;
+					addRs[i].Qk = finishInst;
+				}
+				if(addRs[i].Qj != null && addRs[i].Qk != null) {	//两个操作数均就绪,可以进行计算
+					addRs[i].isReady = true;
+					addRs[i].readyTime = clock;
+				}
+			}
+			System.out.println("addRs "+ i + " Qj = "+addRs[i].Qj +" Qk = "+addRs[i].Qk + " Vj ="+addRs[i].Vj + " Vk = "+ addRs[i].Vk);
+		}
+		//更新乘除法保留站
+		for(int i = 0; i < MultRsNum; i ++) {
+			if(multRs[i].isBusy &&(multRs[i].Qj != null || multRs[i].Qk != null)) {
+				if((multRs[i].Qj).equals(finishInst)) {	//等待该结果作为第一操作数的保留站
+					multRs[i].Vj = result;
+					multRs[i].Qj = null;
+				}
+				if((multRs[i].Qk).equals(finishInst)) { //等待该结果作为第二操作数的保留站
+					multRs[i].Vk = result;
+					multRs[i].Qk = finishInst;
+				}
+				if(multRs[i].Qj != null && multRs[i].Qk != null) {	//两个操作数均就绪,可以进行计算
+					multRs[i].isReady = true;
+					multRs[i].readyTime = clock;
+				}
+			}
+			System.out.println("multRs "+ i + " Qj = "+multRs[i].Qj +" Qk = "+multRs[i].Qk + " Vj ="+multRs[i].Vj + " Vk = "+ multRs[i].Vk);
+		}
+	}
+	
 	public boolean isFinished() {
 		if(nextInstIndex > inst.length - 1)
 			return true;
