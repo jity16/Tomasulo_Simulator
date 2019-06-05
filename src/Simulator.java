@@ -93,7 +93,7 @@ public class Simulator {
                 break;
             case ADD:
             case SUB:
-            	nextInstIndex++;
+            	IssueAdd(nextInstruction);
                 break;
             case MUL:
             case DIV:
@@ -138,6 +138,69 @@ public class Simulator {
         nextInstIndex ++;
         return;
     }
+	
+	
+	/* Issue ADD,MUL
+     * 1.遍历保留站,寻找空闲保留站,流出指令
+     * 2.更新保留站信息
+     * 3.更新指令信息(issue)
+     * 4.更新状态寄存器信息
+     * 5.更新nextInstIndex
+     */
+	public void IssueAdd(Instruction instruction) {
+		int addRsIndex = -1;
+		//寻找空闲保留站
+		for(int i = 0; i < AddRsNum; i ++) {
+			if(!addRs[i].isBusy) {
+				addRsIndex = i;
+				break;
+			}
+		}
+		if(addRsIndex == -1) return; //未找到空闲保留站
+		
+		//更新AddReservation
+		addRs[addRsIndex].instruction = instruction;
+		addRs[addRsIndex].isBusy = true;
+		addRs[addRsIndex].issueTime = clock;
+		addRs[addRsIndex].operation = instruction.OprType;
+		CalInstruction inst = (CalInstruction) instruction;
+		System.out.println("Issue CAL: "+ inst.OprType +" F"+inst.registerD+" "+ " F"+inst.registerS1 + " F"+inst.registerS2);
+		
+		if(registers[inst.registerS1].isWaiting) { //第一操作数未就绪
+			addRs[addRsIndex].Qj = registers[inst.registerS1].stateFunc;
+			addRs[addRsIndex].S1Ready = false;
+		}
+		else {	//第一操作数就绪
+			addRs[addRsIndex].Qj = null;
+			addRs[addRsIndex].Vj = registers[inst.registerS1].value;
+			addRs[addRsIndex].S1Ready = true;
+		}
+		if(registers[inst.registerS2].isWaiting) { //第二操作数未就绪
+			addRs[addRsIndex].Qk = registers[inst.registerS2].stateFunc;
+			addRs[addRsIndex].S2Ready = false;
+		}
+		else { //第二操作数就绪
+			addRs[addRsIndex].Qk = null;
+			addRs[addRsIndex].Vk = registers[inst.registerS2].value;
+			addRs[addRsIndex].S2Ready = true;
+		}
+		if(addRs[addRsIndex].S1Ready && addRs[addRsIndex].S2Ready) {//两个操作数均就绪
+			addRs[addRsIndex].isReady = true;
+			addRs[addRsIndex].readyTime = clock;
+			System.out.println("Ready Inst " + inst.OprType +" " + inst.registerD +" "+inst.registerS1+" "+inst.registerS2);;
+		}
+		
+		//更新指令信息(第一次发射的时间)
+		if(instruction.issue == -1) {
+			instruction.issue = clock;
+		}
+		//更新状态寄存器
+		registers[inst.registerD].stateFunc = "addRS" + Integer.toString(addRsIndex);
+		registers[inst.registerD].isWaiting = true;
+		//更新nextInstIndex
+		nextInstIndex ++;
+		return;
+	}
 	
 	public void exec() {
 		/*Exec Load 
@@ -313,6 +376,9 @@ class ReserveStation{
     int Vj, Vk;					//保留站字段
 
 	boolean isReady;	//当前操作数是否均就绪
+	boolean S1Ready;	//第一操作数就绪
+	boolean S2Ready;	//第二操作数就绪
+	
 	int issueTime;		//指令流出时间
     int readyTime;		//操作数就绪时间
     
@@ -320,10 +386,12 @@ class ReserveStation{
     
     ReserveStation(){
         this.issueTime = -1;
-        this.readyTime = 0;
+        this.readyTime = -1;
         this.isBusy = false;
         this.isExec = false;
         this.isReady = false;
+        this.S1Ready = false;
+        this.S2Ready = false;
         this.Qj =this.Qk = null;
         this.Vj = this.Vk = 0;
     }
