@@ -100,7 +100,8 @@ public class Simulator {
                 IssueMUL(nextInstruction);
                 break;
             case JUMP:
-                nextInstIndex++;
+                //IssueJUMP(nextInstruction);
+            	nextInstIndex ++;
                 break;
         }
 	}
@@ -263,6 +264,55 @@ public class Simulator {
 		nextInstIndex ++;
 		return;
 	}
+	
+	/* Issue JUMP
+     * 1.遍历保留站,寻找空闲保留站,流出指令
+     * 2.更新保留站信息
+     * 3.更新指令信息(issue)
+     * 4.更新状态寄存器信息
+     * 5.更新nextInstIndex
+	 */
+	public void IssueJUMP(Instruction instruction) {
+		int jumpRsIndex = -1; //用加减法保留站
+		for(int i = 0 ; i < AddRsNum; i ++) {
+			if(!addRs[i].isBusy) {
+				jumpRsIndex = i;
+				break;
+			}
+		}
+		if(jumpRsIndex == -1) return;	//无空闲保留站
+		
+		//更新AddReservation
+		addRs[jumpRsIndex].instruction = instruction;
+		addRs[jumpRsIndex].isBusy = true;
+		addRs[jumpRsIndex].issueTime = clock;
+		addRs[jumpRsIndex].operation = instruction.OprType;
+		
+		JumpInstruction jumpInst = (JumpInstruction)instruction;
+		
+		//JUMP,INTEGER,REGISTER,INTERGER
+		addRs[jumpRsIndex].Vj = jumpInst.compare;
+		if(registers[jumpInst.registerNo].isWaiting) {	//REGISTER等待写回
+			addRs[jumpRsIndex].Qk = registers[jumpInst.registerNo].stateFunc;
+			addRs[jumpRsIndex].isReady = false;
+		}
+		else {	//操作数准备就绪
+			addRs[jumpRsIndex].Qk = null;
+			addRs[jumpRsIndex].Vk = registers[jumpInst.registerNo].value;
+			addRs[jumpRsIndex].isReady = true;
+			addRs[jumpRsIndex].readyTime = clock;
+		}
+		
+		//更新指令信息
+		if(instruction.issue == -1) {
+			instruction.issue = clock;
+		}
+		//更新nextInstIndex
+		nextInstIndex ++;
+		return;
+	}
+	
+	
 	
 	public void exec() {
 		/*Exec Load 
