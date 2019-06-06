@@ -8,7 +8,7 @@ public class Tomasulo {
 	static List<String> StrInstList = new ArrayList<>();	//读入的指令集序列
 	static Simulator tomasuloSimulator = new Simulator();			//TomasuloSimulator
 	public static void readFile() {	//读取测试文件指令集
-        String pathname = "test/addsub.nel"; 
+        String pathname = "test/muldiv.nel"; 
         try (FileReader reader = new FileReader(pathname);
              BufferedReader br = new BufferedReader(reader)
         ) {
