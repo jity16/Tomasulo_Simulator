@@ -77,7 +77,8 @@ public class Simulator {
 			System.out.println("-----------"+"Clock: "+clock+"-----------");
 			write();
 			exec();
-			issue();		
+			issue();	
+			printRs();
 		}
 	}
 	
@@ -346,51 +347,6 @@ public class Simulator {
 	}
 	
 	public void exec() {
-		/*Exec ADD,SUB*/
-		int cAddAvailable = CAddNum;
-		for(int i = 0; i < CAddNum; i ++) {
-			if(cadds[i].isBusy) {	//正在运行的加减法运算器
-				cadds[i].remainRunTime --;
-				if(cadds[i].remainRunTime == 1 && cadds[i].instruction.exec == -1) { //指令在当前周期第一次执行完成
-					cadds[i].instruction.exec = clock;
-				}
-				cAddAvailable --;
-			}
-		}
-		while(cAddAvailable != 0) {
-			boolean AddReady = false;
-            int execADDIndex = -1;
-            int earlytime = Integer.MAX_VALUE;
-            for (int i = 0; i < AddRsNum; i++) { 	//取最先就绪的指令
-                if (addRs[i].isBusy && addRs[i].isReady && !addRs[i].isExec && addRs[i].issueTime < earlytime && addRs[i].issueTime != clock){
-                	AddReady = true;				//存在就绪的ADD,MUL
-                	execADDIndex = i;
-                    earlytime = addRs[i].issueTime;
-                }
-            }
-            if(AddReady){					//指令序列中有就绪的ADD,MUL
-            	cAddAvailable--;			//占用运算器资源
-                for (int i = 0; i < CAddNum; i++) {
-                    if(!cadds[i].isBusy){	//占用空闲运算器i
-                    	//更新运算器i的信息
-                    	cadds[i].remainRunTime = ADDTime;	//ADD,SUB运行时间3
-                    	cadds[i].isBusy = true;
-                    	cadds[i].instruction = addRs[execADDIndex].instruction;
-                    	cadds[i].calRs = addRs[execADDIndex];
-                    	cadds[i].result = addRs[execADDIndex].Vj + addRs[execADDIndex].Vk;
-                        System.out.println("Start Exec ADD/SUB: addRs "+execADDIndex+" cadds "+i+" result = "+cadds[i].result);
-                        //更新addRs信息
-                        addRs[execADDIndex].isExec = true;
-                        //关联cadds 和 addRs
-                        cadds[i].calRs = addRs[execADDIndex];
-                        break;
-                    }
-                }
-            }
-            else
-                break;
-		}
-		
 		/*Exec Load 
 		 * 1. 更新已被占用的运算器资源信息
 		 * 2.如果有剩余运算器资源
@@ -441,7 +397,56 @@ public class Simulator {
             }
             else
                 break;
-        }	
+        }
+		
+		/*Exec ADD,SUB*/
+		int cAddAvailable = CAddNum;
+		for(int i = 0; i < CAddNum; i ++) {
+			if(cadds[i].isBusy) {	//正在运行的加减法运算器
+				cadds[i].remainRunTime --;
+				if(cadds[i].remainRunTime == 1 && cadds[i].instruction.exec == -1) { //指令在当前周期第一次执行完成
+					cadds[i].instruction.exec = clock;
+				}
+				cAddAvailable --;
+			}
+		}
+		while(cAddAvailable != 0) {
+			boolean AddReady = false;
+            int execADDIndex = -1;
+            int earlytime = Integer.MAX_VALUE;
+            for (int i = 0; i < AddRsNum; i++) { 	//取最先就绪的指令
+            	//System.out.println("addexec "+ i + " "+ addRs[i].isBusy + " "+ addRs[i].isReady + " "+addRs[i].isExec);
+                if (addRs[i].isBusy && addRs[i].isReady && !addRs[i].isExec && addRs[i].issueTime < earlytime && addRs[i].issueTime != clock){
+                	AddReady = true;				//存在就绪的ADD,MUL
+                	execADDIndex = i;
+                    earlytime = addRs[i].issueTime;
+                }
+            }
+            //System.out.println("AddReady ="+AddReady);
+            if(AddReady){					//指令序列中有就绪的ADD,MUL
+            	cAddAvailable--;			//占用运算器资源
+                for (int i = 0; i < CAddNum; i++) {
+                    if(!cadds[i].isBusy){	//占用空闲运算器i
+                    	//更新运算器i的信息
+                    	cadds[i].remainRunTime = ADDTime;	//ADD,SUB运行时间3
+                    	cadds[i].isBusy = true;
+                    	cadds[i].instruction = addRs[execADDIndex].instruction;
+                    	cadds[i].calRs = addRs[execADDIndex];
+                    	cadds[i].result = addRs[execADDIndex].Vj + addRs[execADDIndex].Vk;
+                        System.out.println("Start Exec ADD/SUB: addRs "+execADDIndex+" cadds "+i+" result = "+cadds[i].result);
+                        //更新addRs信息
+                        addRs[execADDIndex].isExec = true;
+                        //关联cadds 和 addRs
+                        cadds[i].calRs = addRs[execADDIndex];
+                        break;
+                    }
+                }
+            }
+            else
+                break;
+		}
+		
+		
 	}
 	
 	
@@ -501,12 +506,12 @@ public class Simulator {
 					addRs[i].Vk = result;
 					addRs[i].Qk = null;
 				}
-				if(addRs[i].Qj != null && addRs[i].Qk != null) {	//两个操作数均就绪,可以进行计算
+				if(addRs[i].Qj == null && addRs[i].Qk == null) {	//两个操作数均就绪,可以进行计算
 					addRs[i].isReady = true;
 					addRs[i].readyTime = clock;
 				}
 			}
-			System.out.println("addRs "+ i + " Qj = "+addRs[i].Qj +" Qk = "+addRs[i].Qk + " Vj ="+addRs[i].Vj + " Vk = "+ addRs[i].Vk);
+			//System.out.println("addRs "+ i + " Qj = "+addRs[i].Qj +" Qk = "+addRs[i].Qk + " Vj ="+addRs[i].Vj + " Vk = "+ addRs[i].Vk);
 		}
 		//更新乘除法保留站
 		for(int i = 0; i < MultRsNum; i ++) {
@@ -519,12 +524,21 @@ public class Simulator {
 					multRs[i].Vk = result;
 					multRs[i].Qk = null;
 				}
-				if(multRs[i].Qj != null && multRs[i].Qk != null) {	//两个操作数均就绪,可以进行计算
+				if(multRs[i].Qj == null && multRs[i].Qk == null) {	//两个操作数均就绪,可以进行计算
 					multRs[i].isReady = true;
 					multRs[i].readyTime = clock;
 				}
 			}
-			System.out.println("multRs "+ i + " Qj = "+multRs[i].Qj +" Qk = "+multRs[i].Qk + " Vj ="+multRs[i].Vj + " Vk = "+ multRs[i].Vk);
+			//System.out.println("multRs "+ i + " Qj = "+multRs[i].Qj +" Qk = "+multRs[i].Qk + " Vj ="+multRs[i].Vj + " Vk = "+ multRs[i].Vk);
+		}
+	}
+	
+	public void printRs() {
+		for(int i = 0; i < AddRsNum; i ++) {
+			System.out.println("addRs "+ i + " "+ addRs[i].operation + " Qj = "+addRs[i].Qj +" Qk = "+addRs[i].Qk + " Vj ="+addRs[i].Vj + " Vk = "+ addRs[i].Vk);
+		}
+		for(int i = 0; i < MultRsNum; i ++) {
+			System.out.println("multRs "+ i + " "+ multRs[i].operation +" Qj = "+multRs[i].Qj +" Qk = "+multRs[i].Qk + " Vj ="+multRs[i].Vj + " Vk = "+ multRs[i].Vk);
 		}
 	}
 	
