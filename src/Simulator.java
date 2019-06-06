@@ -67,11 +67,28 @@ public class Simulator {
 		clock = 0;
 	}
 	
+	public boolean isFinished() {
+//		if(nextInstIndex > inst.length - 1)
+//			return true;
+//		return false;
+		for(int i = 0; i < AddRsNum; i ++) {
+			if(addRs[i].isBusy) {
+				return false;
+			}
+		}
+		for(int i = 0; i < LoadRsNum; i ++) {
+			if(loadBuffers[i].isBusy) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	public void runSimulator(Instruction[] inst) {
 		this.inst = inst;
 		//System.out.println(inst[0].OprType);
 		while(true){
-			if(isFinished()) break;
+			if(nextInstIndex >= inst.length && isFinished()) break;
 			//计时器
 			clock ++;
 			System.out.println("-----------"+"Clock: "+clock+"-----------");
@@ -80,12 +97,16 @@ public class Simulator {
 			issue();	
 			printRs();
 		}
+		printResult();
 	}
+	
+
 	
 	public void issue() {
 //		curInstIndex ++;
 //		nextInstIndex ++;
 //		Instruction curInstruction = inst[nextInstIndex];
+		if(nextInstIndex > inst.length -1) return;
         Instruction nextInstruction = inst[nextInstIndex];
 //        System.out.println("Issue new instruction: Index = "+nextInstIndex+" Type = "+nextInstruction.OprType);
         switch (nextInstruction.OprType){
@@ -142,7 +163,6 @@ public class Simulator {
         nextInstIndex ++;
         return;
     }
-	
 	
 	/* Issue ADD,SUB
      * 1.遍历保留站,寻找空闲保留站,流出指令
@@ -317,6 +337,9 @@ public class Simulator {
 	}
 	
 	
+	
+	
+	
 	/*寄存器改名
 	 *  + 更新保留站中等待寄存器
 	 */
@@ -347,6 +370,52 @@ public class Simulator {
 	}
 	
 	public void exec() {
+		/*Exec ADD,SUB*/
+		int cAddAvailable = CAddNum;
+		for(int i = 0; i < CAddNum; i ++) {
+			if(cadds[i].isBusy) {	//正在运行的加减法运算器
+				cadds[i].remainRunTime --;
+				if(cadds[i].remainRunTime == 1 && cadds[i].instruction.exec == -1) { //指令在当前周期第一次执行完成
+					cadds[i].instruction.exec = clock;
+				}
+				cAddAvailable --;
+			}
+		}
+		while(cAddAvailable != 0) {
+			boolean AddReady = false;
+            int execADDIndex = -1;
+            int earlytime = Integer.MAX_VALUE;
+            for (int i = 0; i < AddRsNum; i++) { 	//取最先就绪的指令
+            	//System.out.println("addexec "+ i + " "+ addRs[i].isBusy + " "+ addRs[i].isReady + " "+addRs[i].isExec);
+                if (addRs[i].isBusy && addRs[i].isReady && !addRs[i].isExec && addRs[i].issueTime < earlytime && addRs[i].issueTime != clock){
+                	AddReady = true;				//存在就绪的ADD,MUL
+                	execADDIndex = i;
+                    earlytime = addRs[i].issueTime;
+                }
+            }
+            //System.out.println("AddReady ="+AddReady);
+            if(AddReady){					//指令序列中有就绪的ADD,MUL
+            	cAddAvailable--;			//占用运算器资源
+                for (int i = 0; i < CAddNum; i++) {
+                    if(!cadds[i].isBusy){	//占用空闲运算器i
+                    	//更新运算器i的信息
+                    	cadds[i].remainRunTime = ADDTime;	//ADD,SUB运行时间3
+                    	cadds[i].isBusy = true;
+                    	cadds[i].instruction = addRs[execADDIndex].instruction;
+                    	cadds[i].calRs = addRs[execADDIndex];
+                    	cadds[i].result = addRs[execADDIndex].Vj + addRs[execADDIndex].Vk;
+                        System.out.println("Start Exec ADD/SUB: addRs "+execADDIndex+" cadds "+i+" result = "+cadds[i].result);
+                        //更新addRs信息
+                        addRs[execADDIndex].isExec = true;
+                        //关联cadds 和 addRs
+                        cadds[i].calRs = addRs[execADDIndex];
+                        break;
+                    }
+                }
+            }
+            else
+                break;
+		}
 		/*Exec Load 
 		 * 1. 更新已被占用的运算器资源信息
 		 * 2.如果有剩余运算器资源
@@ -399,64 +468,15 @@ public class Simulator {
                 break;
         }
 		
-		/*Exec ADD,SUB*/
-		int cAddAvailable = CAddNum;
-		for(int i = 0; i < CAddNum; i ++) {
-			if(cadds[i].isBusy) {	//正在运行的加减法运算器
-				cadds[i].remainRunTime --;
-				if(cadds[i].remainRunTime == 1 && cadds[i].instruction.exec == -1) { //指令在当前周期第一次执行完成
-					cadds[i].instruction.exec = clock;
-				}
-				cAddAvailable --;
-			}
-		}
-		while(cAddAvailable != 0) {
-			boolean AddReady = false;
-            int execADDIndex = -1;
-            int earlytime = Integer.MAX_VALUE;
-            for (int i = 0; i < AddRsNum; i++) { 	//取最先就绪的指令
-            	//System.out.println("addexec "+ i + " "+ addRs[i].isBusy + " "+ addRs[i].isReady + " "+addRs[i].isExec);
-                if (addRs[i].isBusy && addRs[i].isReady && !addRs[i].isExec && addRs[i].issueTime < earlytime && addRs[i].issueTime != clock){
-                	AddReady = true;				//存在就绪的ADD,MUL
-                	execADDIndex = i;
-                    earlytime = addRs[i].issueTime;
-                }
-            }
-            //System.out.println("AddReady ="+AddReady);
-            if(AddReady){					//指令序列中有就绪的ADD,MUL
-            	cAddAvailable--;			//占用运算器资源
-                for (int i = 0; i < CAddNum; i++) {
-                    if(!cadds[i].isBusy){	//占用空闲运算器i
-                    	//更新运算器i的信息
-                    	cadds[i].remainRunTime = ADDTime;	//ADD,SUB运行时间3
-                    	cadds[i].isBusy = true;
-                    	cadds[i].instruction = addRs[execADDIndex].instruction;
-                    	cadds[i].calRs = addRs[execADDIndex];
-                    	cadds[i].result = addRs[execADDIndex].Vj + addRs[execADDIndex].Vk;
-                        System.out.println("Start Exec ADD/SUB: addRs "+execADDIndex+" cadds "+i+" result = "+cadds[i].result);
-                        //更新addRs信息
-                        addRs[execADDIndex].isExec = true;
-                        //关联cadds 和 addRs
-                        cadds[i].calRs = addRs[execADDIndex];
-                        break;
-                    }
-                }
-            }
-            else
-                break;
-		}
-		
-		
 	}
 	
-	
-	public void write() {
-		/*Write Load
-		 *  (1)寻找当前周期运行结束的指令
-		 *  (2)更新运算资源的信息
-		 *  (3)更新寄存器状态表信息
-		 *  (4)更新保留站信息
-		 */
+	/*Write Load
+	 *  (1)寻找当前周期运行结束的指令
+	 *  (2)更新运算资源的信息
+	 *  (3)更新寄存器状态表信息
+	 *  (4)更新保留站信息
+	 */
+	public void writeLoad() {
 		for(int i = 0; i < CLoadNum; i ++) {
 			if(cloads[i].isBusy && cloads[i].remainRunTime == 1) {
 				//更新运算资源的信息
@@ -479,6 +499,60 @@ public class Simulator {
 			}
 		}
 	}
+	
+	/*Write ADD/SUB */
+	public void writeAdd() {
+		for(int i = 0; i < CAddNum; i ++) {
+			if(cadds[i].isBusy && cadds[i].remainRunTime == 1) {
+				//更新运算资源的信息
+				cadds[i].isBusy = false;
+				cadds[i].remainRunTime = 0;
+				//更新对应的保留站信息
+				cadds[i].calRs.isBusy = false;
+				cadds[i].calRs.isReady = cadds[i].calRs.S1Ready = cadds[i].calRs.S2Ready = false;
+				cadds[i].calRs.isExec = false;
+				cadds[i].calRs.readyTime = 0;
+				cadds[i].calRs.Qj = cadds[i].calRs.Qk = null;
+				cadds[i].calRs.Vj = cadds[i].calRs.Vk = 0;
+				cadds[i].calRs.writeTime = clock;
+				cadds[i].calRs = null;
+				//更新指令写回信息
+				if(cadds[i].instruction.write == -1)	//第一次在本周期写回的指令
+					cadds[i].instruction.write = clock;
+				
+				CalInstruction addInst = (CalInstruction)cadds[i].instruction;
+				System.out.println("Write Issue: ADD/SUB "+addInst.OprType+ " F" + addInst.registerD+ " F" + addInst.registerS1+" F" + addInst.registerS2 + " result = "+ cadds[i].result);
+				
+				String finishAdd = "adder" + Integer.toString(i);
+				int AddResult = cadds[i].result;
+				//更新寄存器状态表
+				upDateRegisters(AddResult,finishAdd);
+				//更新保留站
+				upDateReservation(AddResult,finishAdd);
+			}
+		}
+	}
+	
+	/*Write MUL/DIV */
+	public void writeMult() {
+		
+	}
+	
+	/*Write JUMP */
+	public void writeJump() {
+		
+	}
+	
+	public void write() {
+		writeLoad();    //写回LD
+		writeAdd();		//写回ADD/SUB
+		writeMult();	//写回MUL/DIV
+		writeJump();    //写回JUMP
+	}
+	
+	
+	
+	
 	
 	//指令写回,更新寄存器状态表
 	public void upDateRegisters(int result, String finishInst) {
@@ -542,11 +616,14 @@ public class Simulator {
 		}
 	}
 	
-	public boolean isFinished() {
-		if(nextInstIndex > inst.length - 1)
-			return true;
-		return false;
+	public void printResult() {
+		for(int i = 0; i < inst.length; i ++) {
+			System.out.println(i + " "+ inst[i].OprType + " "
+								+inst[i].issue + " "+inst[i].exec+ " "+inst[i].write);
+		}
 	}
+	
+	
 
 }
 
@@ -590,12 +667,13 @@ class ReserveStation{
 	
 	int issueTime;		//指令流出时间
     int readyTime;		//操作数就绪时间
-    
+    int writeTime;		//指令写回时间
     
     
     ReserveStation(){
         this.issueTime = -1;
         this.readyTime = -1;
+        this.writeTime = -1;
         this.isBusy = false;
         this.isExec = false;
         this.isReady = false;
