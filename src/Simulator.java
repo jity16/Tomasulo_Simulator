@@ -387,7 +387,7 @@ public class Simulator {
             int earlytime = Integer.MAX_VALUE;
             for (int i = 0; i < AddRsNum; i++) { 	//取最先就绪的指令
             	//System.out.println("addexec "+ i + " "+ addRs[i].isBusy + " "+ addRs[i].isReady + " "+addRs[i].isExec);
-                if (addRs[i].isBusy && addRs[i].isReady && !addRs[i].isExec && addRs[i].issueTime < earlytime && addRs[i].issueTime != clock){
+                if (addRs[i].isBusy && addRs[i].isReady && !addRs[i].isExec && addRs[i].issueTime < earlytime && addRs[i].readyTime != clock){
                 	AddReady = true;				//存在就绪的ADD,MUL
                 	execADDIndex = i;
                     earlytime = addRs[i].issueTime;
@@ -543,10 +543,10 @@ public class Simulator {
 		
 	}
 	
-	public void write() {
-		writeLoad();    //写回LD
+	public void write() {	
 		writeAdd();		//写回ADD/SUB
 		writeMult();	//写回MUL/DIV
+		writeLoad();    //写回LD
 		writeJump();    //写回JUMP
 	}
 	
@@ -558,11 +558,11 @@ public class Simulator {
 	public void upDateRegisters(int result, String finishInst) {
 		for(int i = 0; i < RegisterNum;i ++) {
 			//寻找匹配的并等待写回的寄存器
-			if(registers[i].isWaiting && registers[i].stateFunc.contentEquals(finishInst)) {
+			if(registers[i].isWaiting && finishInst.contentEquals(registers[i].stateFunc)) {
 				registers[i].isWaiting = false;
 				registers[i].stateFunc = null;
 				registers[i].value = result;
-				System.out.println("Register "+ i + " value = "+registers[i].value);
+				System.out.println("Write back to Register "+ i + " value = "+registers[i].value);
 			}
 		}		
 	}
