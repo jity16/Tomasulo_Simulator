@@ -81,6 +81,12 @@ public class Simulator {
 				return false;
 			}
 		}
+		for (int i = 0; i < CAddNum; i++) {
+            if (cadds[i].isBusy) return false;
+        }
+		for (int i = 0; i < CLoadNum; i++) {
+            if (cloads[i].isBusy) return false;
+        }
 		return true;
 	}
 	
@@ -89,6 +95,7 @@ public class Simulator {
 		//System.out.println(inst[0].OprType);
 		while(true){
 			if(nextInstIndex >= inst.length && isFinished()) break;
+			if(clock == 15) break;
 			//计时器
 			clock ++;
 			System.out.println("-----------"+"Clock: "+clock+"-----------");
@@ -123,7 +130,6 @@ public class Simulator {
                 break;
             case JUMP:
                 IssueJUMP(nextInstruction);
-            	//nextInstIndex ++;
                 break;
             default:
             	System.out.println("Error in Issue: Unknown Instruction Type!");
@@ -409,6 +415,11 @@ public class Simulator {
                         addRs[execADDIndex].isExec = true;
                         //关联cadds 和 addRs
                         cadds[i].calRs = addRs[execADDIndex];
+                        //更新stateFunc
+                        String oldST = "addRS" + Integer.toString(execADDIndex);
+                        String newST = "adder" + Integer.toString(i);
+                        ExecUpdateRegisters(oldST,newST);
+                        ExecUpdateRs(oldST,newST);
                         break;
                     }
                 }
@@ -617,6 +628,7 @@ public class Simulator {
 	}
 	
 	public void printResult() {
+		System.out.println("-----------------------------------------------");
 		for(int i = 0; i < inst.length; i ++) {
 			System.out.println(i + " "+ inst[i].OprType + " "
 								+inst[i].issue + " "+inst[i].exec+ " "+inst[i].write);
