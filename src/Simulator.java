@@ -101,8 +101,8 @@ public class Simulator {
                 IssueMUL(nextInstruction);
                 break;
             case JUMP:
-                //IssueJUMP(nextInstruction);
-            	nextInstIndex ++;
+                IssueJUMP(nextInstruction);
+            	//nextInstIndex ++;
                 break;
             default:
             	System.out.println("Error in Issue: Unknown Instruction Type!");
@@ -292,7 +292,7 @@ public class Simulator {
 		addRs[jumpRsIndex].operation = instruction.OprType;
 		
 		JumpInstruction jumpInst = (JumpInstruction)instruction;
-		
+		System.out.println("Issue JUMP: "+ jumpInst.OprType +" "+jumpInst.compare+" F"+jumpInst.registerNo + " "+jumpInst.jumpAddr);
 		//JUMP,INTEGER,REGISTER,INTERGER
 		addRs[jumpRsIndex].Qj = null;
 		addRs[jumpRsIndex].Vj = jumpInst.compare;
