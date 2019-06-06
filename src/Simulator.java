@@ -97,7 +97,7 @@ public class Simulator {
                 break;
             case MUL:
             case DIV:
-                nextInstIndex++;
+                IssueMUL(nextInstruction);
                 break;
             case JUMP:
                 nextInstIndex++;
@@ -140,7 +140,7 @@ public class Simulator {
     }
 	
 	
-	/* Issue ADD,MUL
+	/* Issue ADD,SUB
      * 1.遍历保留站,寻找空闲保留站,流出指令
      * 2.更新保留站信息
      * 3.更新指令信息(issue)
@@ -196,6 +196,68 @@ public class Simulator {
 		}
 		//更新状态寄存器
 		registers[inst.registerD].stateFunc = "addRS" + Integer.toString(addRsIndex);
+		registers[inst.registerD].isWaiting = true;
+		//更新nextInstIndex
+		nextInstIndex ++;
+		return;
+	}
+	
+	/* Issue MUL,DIV
+     * 1.遍历保留站,寻找空闲保留站,流出指令
+     * 2.更新保留站信息
+     * 3.更新指令信息(issue)
+     * 4.更新状态寄存器信息
+     * 5.更新nextInstIndex
+     */
+	public void IssueMUL(Instruction instruction) {
+		int multRsIndex = -1;
+		//寻找空闲保留站
+		for(int i = 0; i < MultRsNum; i ++) {
+			if(!multRs[i].isBusy) {
+				multRsIndex = i;
+				break;
+			}
+		}
+		if(multRsIndex == -1) return; //未找到空闲保留站
+		
+		//更新multReservation
+		multRs[multRsIndex].instruction = instruction;
+		multRs[multRsIndex].isBusy = true;
+		multRs[multRsIndex].issueTime = clock;
+		multRs[multRsIndex].operation = instruction.OprType;
+		CalInstruction inst = (CalInstruction) instruction;
+		System.out.println("Issue CAL: "+ inst.OprType +" F"+inst.registerD+" "+ " F"+inst.registerS1 + " F"+inst.registerS2);
+		
+		if(registers[inst.registerS1].isWaiting) { //第一操作数未就绪
+			multRs[multRsIndex].Qj = registers[inst.registerS1].stateFunc;
+			multRs[multRsIndex].S1Ready = false;
+		}
+		else {	//第一操作数就绪
+			multRs[multRsIndex].Qj = null;
+			multRs[multRsIndex].Vj = registers[inst.registerS1].value;
+			multRs[multRsIndex].S1Ready = true;
+		}
+		if(registers[inst.registerS2].isWaiting) { //第二操作数未就绪
+			multRs[multRsIndex].Qk = registers[inst.registerS2].stateFunc;
+			multRs[multRsIndex].S2Ready = false;
+		}
+		else { //第二操作数就绪
+			multRs[multRsIndex].Qk = null;
+			multRs[multRsIndex].Vk = registers[inst.registerS2].value;
+			multRs[multRsIndex].S2Ready = true;
+		}
+		if(multRs[multRsIndex].S1Ready && multRs[multRsIndex].S2Ready) {//两个操作数均就绪
+			multRs[multRsIndex].isReady = true;
+			multRs[multRsIndex].readyTime = clock;
+			System.out.println("Ready Inst " + inst.OprType +" " + inst.registerD +" "+inst.registerS1+" "+inst.registerS2);;
+		}
+		
+		//更新指令信息(第一次发射的时间)
+		if(instruction.issue == -1) {
+			instruction.issue = clock;
+		}
+		//更新状态寄存器
+		registers[inst.registerD].stateFunc = "multRS" + Integer.toString(multRsIndex);
 		registers[inst.registerD].isWaiting = true;
 		//更新nextInstIndex
 		nextInstIndex ++;
