@@ -6,7 +6,10 @@ public class Simulator {
 	final int CAddNum = 3, CMultNum = 2, CLoadNum = 2;
 	final int AddRsNum = 6, MultRsNum = 3, LoadRsNum = 3;
 	final int RegisterNum = 32;
-	final int LDTime = 3, ADDTime = 3, MULTime = 12, DIVTime = 40, JUMPTime = 1;
+	//真实运行时间
+	//final int LDTime = 3, ADDTime = 3, MULTime = 12, DIVTime = 40, JUMPTime = 1;
+	//测试运行时间
+	final int LDTime = 3, ADDTime = 3, MULTime = 4, DIVTime = 4, JUMPTime = 1;
 	//运算器部件
 	Calculator[] cadds;
 	Calculator[] cmults;
@@ -81,12 +84,11 @@ public class Simulator {
 				return false;
 			}
 		}
-		for (int i = 0; i < CAddNum; i++) {
-            if (cadds[i].isBusy) return false;
-        }
-		for (int i = 0; i < CLoadNum; i++) {
-            if (cloads[i].isBusy) return false;
-        }
+		for(int i = 0; i < MultRsNum; i ++) {
+			if(multRs[i].isBusy) {
+				return false;
+			}
+		}
 		return true;
 	}
 	
@@ -95,7 +97,6 @@ public class Simulator {
 		//System.out.println(inst[0].OprType);
 		while(true){
 			if(nextInstIndex >= inst.length && isFinished()) break;
-			if(clock == 15) break;
 			//计时器
 			clock ++;
 			System.out.println("-----------"+"Clock: "+clock+"-----------");
@@ -171,11 +172,6 @@ public class Simulator {
     }
 	
 	/* Issue ADD,SUB
-     * 1.遍历保留站,寻找空闲保留站,流出指令
-     * 2.更新保留站信息
-     * 3.更新指令信息(issue)
-     * 4.更新状态寄存器信息
-     * 5.更新nextInstIndex
      */
 	public void IssueAdd(Instruction instruction) {
 		int addRsIndex = -1;
@@ -233,11 +229,6 @@ public class Simulator {
 	}
 	
 	/* Issue MUL,DIV
-     * 1.遍历保留站,寻找空闲保留站,流出指令
-     * 2.更新保留站信息
-     * 3.更新指令信息(issue)
-     * 4.更新状态寄存器信息
-     * 5.更新nextInstIndex
      */
 	public void IssueMUL(Instruction instruction) {
 		int multRsIndex = -1;
@@ -295,11 +286,6 @@ public class Simulator {
 	}
 	
 	/* Issue JUMP
-     * 1.遍历保留站,寻找空闲保留站,流出指令
-     * 2.更新保留站信息
-     * 3.更新指令信息(issue)
-     * 4.更新状态寄存器信息
-     * 5.更新nextInstIndex
 	 */
 	public void IssueJUMP(Instruction instruction) {
 		int jumpRsIndex = -1; //用加减法保留站
@@ -375,8 +361,39 @@ public class Simulator {
 		}
 	}
 	
-	public void exec() {
-		/*Exec ADD,SUB*/
+	
+	/*Get Inst calculator result*/
+	public int getcalResult(int calindex, int rsindex, OperationType opt) {
+		int result = 0;
+		switch(opt) {
+			case ADD:
+				result = addRs[rsindex].Vj + addRs[rsindex].Vk;
+				break;
+			case SUB:
+				result = addRs[rsindex].Vj - addRs[rsindex].Vk;
+				break;
+			case MUL:
+				result = multRs[rsindex].Vj * multRs[rsindex].Vk;
+				break;
+			case DIV:
+				if(multRs[rsindex].Vk == 0) {	//如果除数为0
+					result = multRs[rsindex].Vj; //将被除数存入寄存器
+					cadds[calindex].remainRunTime = 1; //运行周期为1
+				}
+				else {
+					result = multRs[rsindex].Vj / multRs[rsindex].Vk;
+				}
+				break;
+			case JUMP:
+				break;
+			default:
+				System.out.println("In getcalResult: Wrong input OperationType !");
+		}
+		return result;
+	}
+	
+	/*Exec ADD, SUB */
+	public void execAdd() {
 		int cAddAvailable = CAddNum;
 		for(int i = 0; i < CAddNum; i ++) {
 			if(cadds[i].isBusy) {	//正在运行的加减法运算器
@@ -394,7 +411,7 @@ public class Simulator {
             for (int i = 0; i < AddRsNum; i++) { 	//取最先就绪的指令
             	//System.out.println("addexec "+ i + " "+ addRs[i].isBusy + " "+ addRs[i].isReady + " "+addRs[i].isExec);
                 if (addRs[i].isBusy && addRs[i].isReady && !addRs[i].isExec && addRs[i].issueTime < earlytime && addRs[i].readyTime != clock){
-                	AddReady = true;				//存在就绪的ADD,MUL
+                	AddReady = true;				//存在就绪的ADD,SUB
                 	execADDIndex = i;
                     earlytime = addRs[i].issueTime;
                 }
@@ -409,7 +426,9 @@ public class Simulator {
                     	cadds[i].isBusy = true;
                     	cadds[i].instruction = addRs[execADDIndex].instruction;
                     	cadds[i].calRs = addRs[execADDIndex];
-                    	cadds[i].result = addRs[execADDIndex].Vj + addRs[execADDIndex].Vk;
+                    	OperationType opt = cadds[i].instruction.OprType;
+                    	cadds[i].result = getcalResult(i,execADDIndex,opt);	//获得运算结果
+                    	//cadds[i].result = addRs[execADDIndex].Vj + addRs[execADDIndex].Vk;
                         System.out.println("Start Exec ADD/SUB: addRs "+execADDIndex+" cadds "+i+" result = "+cadds[i].result);
                         //更新addRs信息
                         addRs[execADDIndex].isExec = true;
@@ -427,11 +446,82 @@ public class Simulator {
             else
                 break;
 		}
-		/*Exec Load 
-		 * 1. 更新已被占用的运算器资源信息
-		 * 2.如果有剩余运算器资源
-		 *  2.1取最先就绪的指令
-		 */
+	}
+	
+	
+	/*Exec MUL,DIV*/
+	public void execMult() {
+		int cMultAvailable = CMultNum;
+		for(int i = 0; i < CMultNum; i ++) {
+			if(cmults[i].isBusy) {	//正在运行的乘除法运算器
+				cmults[i].remainRunTime --;
+				if(cmults[i].remainRunTime == 1 && cmults[i].instruction.exec == -1) { //指令在当前周期第一次执行完成
+					cmults[i].instruction.exec = clock;
+				}
+				cMultAvailable --;
+			}
+		}
+		while(cMultAvailable != 0) {
+			boolean MultReady = false;
+            int execMultIndex = -1;
+            int earlytime = Integer.MAX_VALUE;
+            for (int i = 0; i < MultRsNum; i++) { 	//取最先就绪的指令
+            	//System.out.println("addexec "+ i + " "+ addRs[i].isBusy + " "+ addRs[i].isReady + " "+addRs[i].isExec);
+                if (multRs[i].isBusy && multRs[i].isReady && !multRs[i].isExec && multRs[i].issueTime < earlytime && multRs[i].readyTime != clock){
+                	MultReady = true;				//存在就绪的MUL,DIV
+                	execMultIndex = i;
+                    earlytime = multRs[i].issueTime;
+                }
+            }
+            //System.out.println("AddReady ="+AddReady);
+            if(MultReady){					//指令序列中有就绪的ADD,MUL
+            	cMultAvailable--;			//占用运算器资源
+                for (int i = 0; i < CMultNum; i++) {
+                    if(!cmults[i].isBusy){	//占用空闲运算器i
+                    	//更新运算器i的信息
+                    	cmults[i].isBusy = true;
+                    	cmults[i].instruction = multRs[execMultIndex ].instruction;
+                    	
+                    	if(cmults[i].instruction.OprType == OperationType.MUL) {
+                    		cmults[i].remainRunTime = MULTime;
+                    	}
+                    	else if(cmults[i].instruction.OprType == OperationType.DIV) {
+                    		cmults[i].remainRunTime = DIVTime;
+                    	}
+                    	
+                    	cmults[i].calRs = multRs[execMultIndex];
+                    	cmults[i].result = getcalResult(i,execMultIndex,cmults[i].instruction.OprType);
+                    	//cmults[i].result = multRs[execMultIndex].Vj + multRs[execMultIndex].Vk;
+                        System.out.println("Start Exec SUB/DIV: multRs "+execMultIndex+" cmults "+i+" result = "+cmults[i].result);
+                        //更新addRs信息
+                        multRs[execMultIndex].isExec = true;
+                        //关联cadds 和 addRs
+                        cmults[i].calRs = multRs[execMultIndex];
+                        //更新stateFunc
+                        String oldST = "mulRS" + Integer.toString(execMultIndex);
+                        String newST = "multer" + Integer.toString(i);
+                        ExecUpdateRegisters(oldST,newST);
+                        ExecUpdateRs(oldST,newST);
+                        break;
+                    }
+                }
+            }
+            else
+                break;
+		}
+	}
+	
+	
+	
+	
+	/*Exec Load 
+	 * 1. 更新已被占用的运算器资源信息
+	 * 2.如果有剩余运算器资源
+	 * 3.取最先就绪的指令
+	 * 4.占用空闲运算器
+	 * 5.更新寄存器状态表和保留站
+	 */
+	public void execLoad() {
 		int cLoadAvailable = CLoadNum;
 		for(int i = 0; i < CLoadNum; i ++) {
 			if(cloads[i].isBusy) {	//被占用的运算器
@@ -478,7 +568,13 @@ public class Simulator {
             else
                 break;
         }
-		
+	}
+	
+	
+	public void exec() {
+		execAdd();
+		execLoad();
+		execMult();
 	}
 	
 	/*Write Load
@@ -546,7 +642,35 @@ public class Simulator {
 	
 	/*Write MUL/DIV */
 	public void writeMult() {
-		
+		for(int i = 0; i < CMultNum; i ++) {
+			if(cmults[i].isBusy && cmults[i].remainRunTime == 1) {
+				//更新运算资源的信息
+				cmults[i].isBusy = false;
+				cmults[i].remainRunTime = 0;
+				//更新对应的保留站信息
+				cmults[i].calRs.isBusy = false;
+				cmults[i].calRs.isReady = cmults[i].calRs.S1Ready = cmults[i].calRs.S2Ready = false;
+				cmults[i].calRs.isExec = false;
+				cmults[i].calRs.readyTime = 0;
+				cmults[i].calRs.Qj = cmults[i].calRs.Qk = null;
+				cmults[i].calRs.Vj = cmults[i].calRs.Vk = 0;
+				cmults[i].calRs.writeTime = clock;
+				cmults[i].calRs = null;
+				//更新指令写回信息
+				if(cmults[i].instruction.write == -1)	//第一次在本周期写回的指令
+					cmults[i].instruction.write = clock;
+				
+				CalInstruction multInst = (CalInstruction)cmults[i].instruction;
+				System.out.println("Write Issue: MUL/SUB "+multInst.OprType+ " F" + multInst.registerD+ " F" + multInst.registerS1+" F" + multInst.registerS2 + " result = "+ cmults[i].result);
+				
+				String finishMult = "multer" + Integer.toString(i);
+				int MultResult = cadds[i].result;
+				//更新寄存器状态表
+				upDateRegisters(MultResult,finishMult);
+				//更新保留站
+				upDateReservation(MultResult,finishMult);
+			}
+		}
 	}
 	
 	/*Write JUMP */
