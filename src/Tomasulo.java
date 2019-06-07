@@ -38,11 +38,7 @@ public class Tomasulo {
 		frame.setSize(4000 , 1000);
 		frame.getContentPane().setBackground(Color.WHITE);
 		frame.setVisible(true);
-    	
-    	
-    	
-    	
-    	
+    		
     	
     	readFile();
     	//输出待执行的指令集序列
