@@ -97,6 +97,7 @@ public class Simulator {
 		//System.out.println(inst[0].OprType);
 		while(true){
 			if(nextInstIndex >= inst.length && isFinished()) break;
+			//if(clock >= 22) break;
 			//计时器
 			clock ++;
 			System.out.println("-----------"+"Clock: "+clock+"-----------");
@@ -498,7 +499,7 @@ public class Simulator {
                         //关联cadds 和 addRs
                         cmults[i].calRs = multRs[execMultIndex];
                         //更新stateFunc
-                        String oldST = "mulRS" + Integer.toString(execMultIndex);
+                        String oldST = "multRS" + Integer.toString(execMultIndex);
                         String newST = "multer" + Integer.toString(i);
                         ExecUpdateRegisters(oldST,newST);
                         ExecUpdateRs(oldST,newST);
@@ -573,8 +574,8 @@ public class Simulator {
 	
 	public void exec() {
 		execAdd();
-		execLoad();
 		execMult();
+		execLoad();	
 	}
 	
 	/*Write Load
