@@ -440,6 +440,13 @@ public class Simulator {
                     	cadds[i].calRs = addRs[execADDIndex];
                     	OperationType opt = cadds[i].instruction.OprType;
                     	cadds[i].result = getcalResult(i,execADDIndex,opt);	//获得运算结果
+                    	
+                    	//更新运行周期为1的JUMP的exec
+                    	if(opt == OperationType.JUMP) {
+                    		if(cadds[i].instruction.exec == -1)
+                                cadds[i].instruction.exec = clock;
+                    	}
+
                     	//cadds[i].result = addRs[execADDIndex].Vj + addRs[execADDIndex].Vk;
                         System.out.println("Start Exec ADD/SUB: addRs "+execADDIndex+" cadds "+i+" result = "+cadds[i].result);
                         //更新addRs信息
