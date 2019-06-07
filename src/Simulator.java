@@ -23,9 +23,10 @@ public class Simulator {
 	
 	
 	Instruction[] inst;	//指令集序列
-	boolean hasJump;			
+	boolean needJump;	//Jump指令		
 	//int curInstIndex;	//当前指令的序号
     int nextInstIndex;	//下一条待发射指令的序号
+    
     int clock;			//时钟
     
 	Simulator(){
@@ -64,7 +65,7 @@ public class Simulator {
         }
 		//初始化其余成员变量
 		inst = null;
-		hasJump = false;
+		needJump = false;
 //		curInstIndex = 0;
 		nextInstIndex = 0;
 		clock = 0;
@@ -115,7 +116,7 @@ public class Simulator {
 //		curInstIndex ++;
 //		nextInstIndex ++;
 //		Instruction curInstruction = inst[nextInstIndex];
-		if(nextInstIndex > inst.length -1) return;
+		if(needJump || nextInstIndex > inst.length -1) return;
         Instruction nextInstruction = inst[nextInstIndex];
 //        System.out.println("Issue new instruction: Index = "+nextInstIndex+" Type = "+nextInstruction.OprType);
         switch (nextInstruction.OprType){
@@ -190,6 +191,7 @@ public class Simulator {
 		addRs[addRsIndex].isBusy = true;
 		addRs[addRsIndex].issueTime = clock;
 		addRs[addRsIndex].operation = instruction.OprType;
+		addRs[addRsIndex].writeTime = -1;
 		CalInstruction inst = (CalInstruction) instruction;
 		System.out.println("Issue CAL: "+ inst.OprType +" F"+inst.registerD+" "+ " F"+inst.registerS1 + " F"+inst.registerS2);
 		
@@ -247,6 +249,7 @@ public class Simulator {
 		multRs[multRsIndex].isBusy = true;
 		multRs[multRsIndex].issueTime = clock;
 		multRs[multRsIndex].operation = instruction.OprType;
+		multRs[multRsIndex].writeTime = -1;
 		CalInstruction inst = (CalInstruction) instruction;
 		System.out.println("Issue CAL: "+ inst.OprType +" F"+inst.registerD+" "+ " F"+inst.registerS1 + " F"+inst.registerS2);
 		
@@ -291,7 +294,7 @@ public class Simulator {
 	public void IssueJUMP(Instruction instruction) {
 		int jumpRsIndex = -1; //用加减法保留站
 		for(int i = 0 ; i < AddRsNum; i ++) {
-			if(!addRs[i].isBusy) {
+			if(!addRs[i].isBusy && addRs[i].writeTime != clock) {
 				jumpRsIndex = i;
 				break;
 			}
@@ -303,6 +306,7 @@ public class Simulator {
 		addRs[jumpRsIndex].isBusy = true;
 		addRs[jumpRsIndex].issueTime = clock;
 		addRs[jumpRsIndex].operation = instruction.OprType;
+		addRs[jumpRsIndex].writeTime = -1;
 		
 		JumpInstruction jumpInst = (JumpInstruction)instruction;
 		System.out.println("Issue JUMP: "+ jumpInst.OprType +" "+jumpInst.compare+" F"+jumpInst.registerNo + " "+jumpInst.jumpAddr);
@@ -324,7 +328,8 @@ public class Simulator {
 		if(instruction.issue == -1) {
 			instruction.issue = clock;
 		}
-		//更新nextInstIndex
+		//更新nextInstIndex和needJump
+		needJump = true;
 		nextInstIndex ++;
 		return;
 	}
@@ -373,6 +378,14 @@ public class Simulator {
 			case SUB:
 				result = addRs[rsindex].Vj - addRs[rsindex].Vk;
 				break;
+			case JUMP:
+				cadds[calindex].remainRunTime = JUMPTime;
+				if(addRs[rsindex].Vj == addRs[rsindex].Vk) {
+					result = ((JumpInstruction)addRs[rsindex].instruction).jumpAddr;
+				}else {
+					result = 1;
+				}
+				break;
 			case MUL:
 				result = multRs[rsindex].Vj * multRs[rsindex].Vk;
 				break;
@@ -385,15 +398,13 @@ public class Simulator {
 					result = multRs[rsindex].Vj / multRs[rsindex].Vk;
 				}
 				break;
-			case JUMP:
-				break;
 			default:
 				System.out.println("In getcalResult: Wrong input OperationType !");
 		}
 		return result;
 	}
 	
-	/*Exec ADD, SUB */
+	/*Exec ADD, SUB, JUMP*/
 	public void execAdd() {
 		int cAddAvailable = CAddNum;
 		for(int i = 0; i < CAddNum; i ++) {
@@ -448,7 +459,6 @@ public class Simulator {
                 break;
 		}
 	}
-	
 	
 	/*Exec MUL,DIV*/
 	public void execMult() {
@@ -511,9 +521,6 @@ public class Simulator {
                 break;
 		}
 	}
-	
-	
-	
 	
 	/*Exec Load 
 	 * 1. 更新已被占用的运算器资源信息
@@ -608,7 +615,7 @@ public class Simulator {
 		}
 	}
 	
-	/*Write ADD/SUB */
+	/*Write ADD/SUB/JUMP */
 	public void writeAdd() {
 		for(int i = 0; i < CAddNum; i ++) {
 			if(cadds[i].isBusy && cadds[i].remainRunTime == 1) {
@@ -628,15 +635,24 @@ public class Simulator {
 				if(cadds[i].instruction.write == -1)	//第一次在本周期写回的指令
 					cadds[i].instruction.write = clock;
 				
-				CalInstruction addInst = (CalInstruction)cadds[i].instruction;
-				System.out.println("Write Issue: ADD/SUB "+addInst.OprType+ " F" + addInst.registerD+ " F" + addInst.registerS1+" F" + addInst.registerS2 + " result = "+ cadds[i].result);
+				//ADD/SUB指令
+				if(cadds[i].instruction.OprType == OperationType.ADD ||cadds[i].instruction.OprType == OperationType.SUB) {
+					CalInstruction addInst = (CalInstruction)cadds[i].instruction;
+					System.out.println("Write Issue: ADD/SUB "+addInst.OprType+ " F" + addInst.registerD+ " F" + addInst.registerS1+" F" + addInst.registerS2 + " result = "+ cadds[i].result);
+					
+					String finishAdd = "adder" + Integer.toString(i);
+					int AddResult = cadds[i].result;
+					//更新寄存器状态表
+					upDateRegisters(AddResult,finishAdd);
+					//更新保留站
+					upDateReservation(AddResult,finishAdd);
+				}
+				//Jump指令
+				else if(cadds[i].instruction.OprType == OperationType.JUMP) {
+					 nextInstIndex += cadds[i].result-1;
+	                 needJump = false;
+				}
 				
-				String finishAdd = "adder" + Integer.toString(i);
-				int AddResult = cadds[i].result;
-				//更新寄存器状态表
-				upDateRegisters(AddResult,finishAdd);
-				//更新保留站
-				upDateReservation(AddResult,finishAdd);
 			}
 		}
 	}
@@ -674,16 +690,10 @@ public class Simulator {
 		}
 	}
 	
-	/*Write JUMP */
-	public void writeJump() {
-		
-	}
-	
 	public void write() {	
-		writeAdd();		//写回ADD/SUB
+		writeAdd();		//写回ADD/SUB/JUMP
 		writeMult();	//写回MUL/DIV
 		writeLoad();    //写回LD
-		writeJump();    //写回JUMP
 	}
 	
 	
