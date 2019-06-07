@@ -116,7 +116,7 @@ public class Simulator {
 //		curInstIndex ++;
 //		nextInstIndex ++;
 //		Instruction curInstruction = inst[nextInstIndex];
-		if(needJump || nextInstIndex > inst.length -1) return;
+		if(needJump || nextInstIndex > inst.length -1) return; //Jump 未写回，不能发射下一条
         Instruction nextInstruction = inst[nextInstIndex];
 //        System.out.println("Issue new instruction: Index = "+nextInstIndex+" Type = "+nextInstruction.OprType);
         switch (nextInstruction.OprType){
@@ -441,12 +441,11 @@ public class Simulator {
                     	OperationType opt = cadds[i].instruction.OprType;
                     	cadds[i].result = getcalResult(i,execADDIndex,opt);	//获得运算结果
                     	
-                    	//更新运行周期为1的JUMP的exec
+                    	//更新运行周期为1的JUMP的exec (Why need it ?????)
                     	if(opt == OperationType.JUMP) {
                     		if(cadds[i].instruction.exec == -1)
                                 cadds[i].instruction.exec = clock;
                     	}
-
                     	//cadds[i].result = addRs[execADDIndex].Vj + addRs[execADDIndex].Vk;
                         System.out.println("Start Exec ADD/SUB: addRs "+execADDIndex+" cadds "+i+" result = "+cadds[i].result);
                         //更新addRs信息
@@ -657,7 +656,7 @@ public class Simulator {
 				//Jump指令
 				else if(cadds[i].instruction.OprType == OperationType.JUMP) {
 					 nextInstIndex += cadds[i].result-1;
-	                 needJump = false;
+	                 needJump = false; //Jump指令写回
 				}
 				
 			}
