@@ -148,7 +148,7 @@ public class Simulator {
 	public void IssueLoad(Instruction instruction){
         int loadBufferIndex = -1;
         for(int i = 0; i < LoadRsNum;i ++) {
-        	if(!loadBuffers[i].isBusy) {	//有空闲LoadBuffer
+        	if(!loadBuffers[i].isBusy && loadBuffers[i].writeTime != clock) {	//有空闲LoadBuffer且不是在当前周期写回的
         		loadBufferIndex = i;		//占用该空闲保留站
         		break;
         	}
@@ -178,7 +178,7 @@ public class Simulator {
 		int addRsIndex = -1;
 		//寻找空闲保留站
 		for(int i = 0; i < AddRsNum; i ++) {
-			if(!addRs[i].isBusy) {
+			if(!addRs[i].isBusy && addRs[i].writeTime != clock) { //不能是当前周期写回的
 				addRsIndex = i;
 				break;
 			}
@@ -235,7 +235,7 @@ public class Simulator {
 		int multRsIndex = -1;
 		//寻找空闲保留站
 		for(int i = 0; i < MultRsNum; i ++) {
-			if(!multRs[i].isBusy) {
+			if(!multRs[i].isBusy && multRs[i].writeTime != clock) {
 				multRsIndex = i;
 				break;
 			}
