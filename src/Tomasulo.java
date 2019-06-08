@@ -3,7 +3,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
+import javax.swing.BorderFactory;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -11,7 +11,7 @@ import java.awt.event.ActionListener;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
-import javax.swing.BorderFactory;
+
 import javax.swing.UIManager;
 import javax.swing.JOptionPane;
 
@@ -19,6 +19,7 @@ import javax.swing.JOptionPane;
 public class Tomasulo {
 	static List<String> StrInstList = new ArrayList<>();	//读入的指令集序列
 	static Simulator tomasuloSimulator;			//TomasuloSimulator
+	static String pathname = "test/test0.nel"; 
 	
 	//UI
 	JFrame frame;
@@ -26,6 +27,8 @@ public class Tomasulo {
 	LoadBufferUI LoadBufferPanel;
 	RegisterUI   RegistersPanel;
 	ReservationUI ReserveStationPanel;
+	CalculatorUI CalculatorPanel;
+	
 
 	public static void setUIFont() //修改全局字体
 	{
@@ -44,7 +47,7 @@ public class Tomasulo {
 	}
 	
 	public static void readFile() {	//读取测试文件指令集
-        String pathname = "test/test0.nel"; 
+        
         try (FileReader reader = new FileReader(pathname);
              BufferedReader br = new BufferedReader(reader)
         ) {
@@ -64,18 +67,21 @@ public class Tomasulo {
     	Tomasulo tomasuloUI = new Tomasulo();
     	
     	//各部件顶点位置
-    	Point conPoint = new Point(100,100); //Control
-    	Point LBpoint = new Point(1100,100); //LoadBuffer
+    	Point conPoint = new Point(100,50); //Control
+    	Point LBpoint = new Point(100,200); //LoadBuffer
+    	Point RsPoint = new Point(1400,100); //RS
     	Point RegPoint = new Point(100,600); //Registers
-    	Point RsPoint = new Point(400,100); //RS
+    	Point CalPoint = new Point(550,200); //Calculator
+    	
     	
     	
     	//各部件大小 per height = 50
     	Dimension windowSize = new Dimension(2000 , 1000);//frame
-    	Dimension conSize = new Dimension(200,400);  //control
+    	Dimension conSize = new Dimension(400,100);  //control
     	Dimension LBsize = new Dimension(400,200); //LoadBuffer
-    	Dimension RegSize = new Dimension(1400,300);//Registers
+    	Dimension RegSize = new Dimension(1800,300);//Registers
     	Dimension RsSize = new Dimension(500,500); //RS
+    	Dimension CalSize = new Dimension(800,400);//Calculator
     	
     	//各部件背景颜色
     	Color frameColor = new java.awt.Color(240,248,255);
@@ -83,6 +89,7 @@ public class Tomasulo {
     	Color LBcolor =  new java.awt.Color(230,230,250);
     	Color RegColor =  new java.awt.Color(230,230,250);
     	Color RsColor =  new java.awt.Color(230,230,250);
+    	Color CalColor =  new java.awt.Color(230,230,250);
     	
     	//边框颜色和线性
     	Color BoderColor = new java.awt.Color(70,130,180);
@@ -93,7 +100,8 @@ public class Tomasulo {
     	Border LBborder = BorderFactory.createTitledBorder(borderline, "LoadBuffer");
     	Border RegBorder = BorderFactory.createTitledBorder(borderline, "Register Status");
     	Border RsBorder = BorderFactory.createTitledBorder(borderline, "Reservation Station");
-    		
+    	Border CalBorder = BorderFactory.createTitledBorder(borderline, "Calculators");
+    	
     	//总界面
     	tomasuloUI.frame = new JFrame("Tomasulo Simulator");
     	tomasuloUI.frame.setSize(windowSize);
@@ -134,6 +142,15 @@ public class Tomasulo {
 		tomasuloUI.ReserveStationPanel.setBackground(RsColor);
 		tomasuloUI.ReserveStationPanel.setBorder(RsBorder); 
 		tomasuloUI.frame.add(tomasuloUI.ReserveStationPanel);
+		tomasuloUI.frame.setLayout(null);
+		
+		//Calculator
+		tomasuloUI.CalculatorPanel = new CalculatorUI();
+		tomasuloUI.CalculatorPanel.setLocation(CalPoint);
+		tomasuloUI.CalculatorPanel.setSize(CalSize);
+		tomasuloUI.CalculatorPanel.setBackground(CalColor);
+		tomasuloUI.CalculatorPanel.setBorder(CalBorder); 
+		tomasuloUI.frame.add(tomasuloUI.CalculatorPanel);
 		tomasuloUI.frame.setLayout(null);
 		
 		
@@ -267,10 +284,87 @@ public class Tomasulo {
         }
     }
     
+    public String getInst(String opr, int i ) {
+    	String res = null;
+    	switch(opr) {
+    		case "LD":
+    			res = opr + " F"+Integer.toString(((LoadInstruction)tomasuloSimulator.cloads[i].instruction).registerNo)+" "+Integer.toString(((LoadInstruction)tomasuloSimulator.cloads[i].instruction).loadAddr);
+    			break;
+    		case "ADD":
+    		case "SUB":
+    			res = opr + 
+					" F"+Integer.toString(((CalInstruction)tomasuloSimulator.cadds[i].instruction).registerD)+
+					" F"+Integer.toString(((CalInstruction)tomasuloSimulator.cadds[i].instruction).registerS1)+
+					" F"+Integer.toString(((CalInstruction)tomasuloSimulator.cadds[i].instruction).registerS2);
+    			break;
+    		case "MUL":
+    		case "DIV":
+    			res = opr + 
+					" F"+Integer.toString(((CalInstruction)tomasuloSimulator.cmults[i].instruction).registerD)+
+					" F"+Integer.toString(((CalInstruction)tomasuloSimulator.cmults[i].instruction).registerS1)+
+					" F"+Integer.toString(((CalInstruction)tomasuloSimulator.cmults[i].instruction).registerS2);
+				break;
+    		case "JUMP":
+    			res = opr + 
+					" "+Integer.toString(((JumpInstruction)tomasuloSimulator.cadds[i].instruction).compare)+
+					" F"+Integer.toString(((JumpInstruction)tomasuloSimulator.cadds[i].instruction).registerNo)+
+					" "+Integer.toString(((JumpInstruction)tomasuloSimulator.cadds[i].instruction).jumpAddr);
+    			break;
+    		default:
+    	}
+    	return res;
+    }
+    public void updateCalculators() {
+    	//更新加减法器部件
+    	for(int i = 0; i < tomasuloSimulator.CAddNum; i ++) {
+    		String insttext_a = null;
+    		String lefttime_a = null;
+    		if(tomasuloSimulator.cadds[i].isBusy) {
+    			insttext_a = getInst(tomasuloSimulator.cadds[i].instruction.OprType.toString(),i);
+    			lefttime_a = Integer.toString(tomasuloSimulator.cadds[i].remainRunTime);
+    		}else {
+    			insttext_a = null;
+    			lefttime_a = null;
+    		}
+    		CalculatorPanel.labels[i+1][1].setText(insttext_a);
+    		CalculatorPanel.labels[i+1][2].setText(lefttime_a);
+    	}
+    	//更新乘除法器部件
+    	for(int i = 0; i < tomasuloSimulator.CMultNum; i ++) {
+    		String insttext_m = null;
+    		String lefttime_m = null;
+    		if(tomasuloSimulator.cmults[i].isBusy) {
+    			insttext_m = getInst(tomasuloSimulator.cmults[i].instruction.OprType.toString(),i);
+    			lefttime_m = Integer.toString(tomasuloSimulator.cmults[i].remainRunTime);
+    		}else {
+    			insttext_m = null;
+    			lefttime_m = null;
+    		}
+    		CalculatorPanel.labels[i+4][1].setText(insttext_m);
+    		CalculatorPanel.labels[i+4][2].setText(lefttime_m);
+    	}
+    	//更新loader
+    	for(int i = 0; i < tomasuloSimulator.CLoadNum; i ++) {
+    		String insttext_l = null;
+    		String lefttime_l = null;
+    		if(tomasuloSimulator.cloads[i].isBusy) {
+    			insttext_l = getInst(tomasuloSimulator.cloads[i].instruction.OprType.toString(),i);
+    			lefttime_l = Integer.toString(tomasuloSimulator.cloads[i].remainRunTime);
+    		}else {
+    			insttext_l = null;
+    			lefttime_l = null;
+    		}
+    		CalculatorPanel.labels[i+6][1].setText(insttext_l);
+    		CalculatorPanel.labels[i+6][2].setText(lefttime_l);
+    	}
+    	
+    }
+    
     public void updateUI(boolean finished) {
     	updateLoadBuffer();
     	updateRegisters();
     	updateReservation();
+    	updateCalculators();
 //    	if(finished) {
 //    		JOptionPane.showMessageDialog(null, "finished", "finished", JOptionPane.ERROR_MESSAGE);
 //    	}
