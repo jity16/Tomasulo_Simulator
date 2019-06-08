@@ -24,7 +24,6 @@ public class RegisterUI extends JPanel{
 				this.add(labels[i][j]);
 			}
 		}
-		
 		labels[1][0].setText("Status");
 		labels[2][0].setText("Value");
 		labels[4][0].setText("Status");

@@ -28,10 +28,11 @@ public class Simulator {
 	boolean needJump;	//Jump指令		
 	//int curInstIndex;	//当前指令的序号
     int nextInstIndex;	//下一条待发射指令的序号
-    
+    boolean finishAllInst;  //是否全部结束
     int clock;			//时钟
     
-	Simulator(){
+	Simulator(Tomasulo tomasulo){
+		superUI = tomasulo;
 		//实例化运算器部件
 		this.cadds = new Calculator[CAddNum];
 		this.cmults = new Calculator[CMultNum];
@@ -66,11 +67,13 @@ public class Simulator {
             registers[i] = new RegisterStatus();
         }
 		//初始化其余成员变量
-		inst = null;
+		this.inst = null ;
 		needJump = false;
 //		curInstIndex = 0;
 		nextInstIndex = 0;
 		clock = 0;
+		finishAllInst = true;
+		
 	}
 	
 	public boolean isFinished() {
@@ -95,15 +98,16 @@ public class Simulator {
 		return true;
 	}
 	
-	public void runSimulator(Tomasulo tomasulo, Instruction[] inst) {
-		superUI = tomasulo;
+	public void runSimulator(Instruction[] inst) {
 		this.inst = inst;
 		//System.out.println(inst[0].OprType);
 //		while(true){
 		if(nextInstIndex >= inst.length && isFinished()) {
+			finishAllInst = true; //完全结束
 			printResult();
 			return;
 		}
+		finishAllInst = false;
 			//if(clock >= 22) break;
 			//计时器
 		clock ++;
@@ -113,6 +117,7 @@ public class Simulator {
 		issue();	
 		printRs();
 //		}
+		superUI.updateUI(finishAllInst);
 		return;
 	}
 	
@@ -398,7 +403,9 @@ public class Simulator {
 			case DIV:
 				if(multRs[rsindex].Vk == 0) {	//如果除数为0
 					result = multRs[rsindex].Vj; //将被除数存入寄存器
-					cadds[calindex].remainRunTime = 1; //运行周期为1
+					cmults[calindex].remainRunTime = 1; //运行周期为1
+					 if(cmults[calindex].instruction.exec == -1)
+						 cmults[calindex].instruction.exec = clock;
 				}
 				else {
 					result = multRs[rsindex].Vj / multRs[rsindex].Vk;
@@ -661,6 +668,8 @@ public class Simulator {
 				}
 				//Jump指令
 				else if(cadds[i].instruction.OprType == OperationType.JUMP) {
+					JumpInstruction jumpInst = (JumpInstruction)cadds[i].instruction;
+					System.out.println("Write Issue: JUMP "+jumpInst.OprType+ " " + jumpInst.compare+ " F" + jumpInst.registerNo+" " + jumpInst.jumpAddr + " result = "+ cadds[i].result);
 					 nextInstIndex += cadds[i].result-1;
 	                 needJump = false; //Jump指令写回
 				}
@@ -693,7 +702,7 @@ public class Simulator {
 				System.out.println("Write Issue: MUL/SUB "+multInst.OprType+ " F" + multInst.registerD+ " F" + multInst.registerS1+" F" + multInst.registerS2 + " result = "+ cmults[i].result);
 				
 				String finishMult = "multer" + Integer.toString(i);
-				int MultResult = cadds[i].result;
+				int MultResult = cmults[i].result;
 				//更新寄存器状态表
 				upDateRegisters(MultResult,finishMult);
 				//更新保留站
