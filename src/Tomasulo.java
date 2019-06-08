@@ -6,15 +6,35 @@ import java.util.List;
 
 import java.awt.*;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.border.Border;
+import javax.swing.BorderFactory;
+import javax.swing.UIManager;
+
 
 public class Tomasulo {
 	static List<String> StrInstList = new ArrayList<>();	//读入的指令集序列
 	static Simulator tomasuloSimulator = new Simulator();			//TomasuloSimulator
 	
 	//UI
-	JFrame jframe = new JFrame();
+	JFrame frame;
+	JPanel LoadBuffer;
 
-	
+	public static void setUIFont()
+	{
+		Font f = new Font("Comic Sans MS",Font.PLAIN,25);
+		String   names[]={ "Label", "CheckBox", "PopupMenu","MenuItem", "CheckBoxMenuItem",
+				"JRadioButtonMenuItem","ComboBox", "Button", "Tree", "ScrollPane",
+				"TabbedPane", "EditorPane", "TitledBorder", "Menu", "TextArea",
+				"OptionPane", "MenuBar", "ToolBar", "ToggleButton", "ToolTip",
+				"ProgressBar", "TableHeader", "Panel", "List", "ColorChooser",
+				"PasswordField","TextField", "Table", "Label", "Viewport",
+				"RadioButtonMenuItem","RadioButton", "DesktopPane", "InternalFrame"
+		}; 
+		for (String item : names) {
+			 UIManager.put(item+ ".font",f); 
+		}
+	}
 	
 	public static void readFile() {	//读取测试文件指令集
         String pathname = "test/test2.nel"; 
@@ -33,12 +53,40 @@ public class Tomasulo {
     }
 	
     public static void main(String []args){
+    	setUIFont();
+    	Tomasulo tomasuloUI = new Tomasulo();
     	
-    	JFrame frame = new JFrame("我的第一个Frame");
-		frame.setSize(4000 , 1000);
-		frame.getContentPane().setBackground(Color.WHITE);
-		frame.setVisible(true);
+    	//总界面
+    	tomasuloUI.frame = new JFrame("Tomasulo Simulator");
+    	tomasuloUI.frame.setSize(1500 , 1000);
+    	tomasuloUI.frame.getContentPane().setBackground(new java.awt.Color(240,248,255));
+    	tomasuloUI.frame.setVisible(true);
+    	
+    	//各部件顶点位置
+    	Point LBpoint = new Point(100,100); //LoadBuffer
+    	
+    	//各部件背景颜色
+    	Color LBcolor =  new java.awt.Color(230,230,250);
+    	
+    	//边框颜色
+    	Color LBBoderColor = new java.awt.Color(70,130,180);
+    	
+    	//各部件边框
+    	Border LBb_line = BorderFactory.createMatteBorder(2, 2, 5, 5, LBBoderColor);
+    	Border LBborder = BorderFactory.createTitledBorder(LBb_line, "LoadBuffer");  
+    	
     		
+    	//LoadBuffer
+    	tomasuloUI.LoadBuffer = new LoadBufferUI();
+    	tomasuloUI.LoadBuffer.setSize(500,300);
+    	tomasuloUI.LoadBuffer.setLocation(LBpoint);
+    	tomasuloUI.LoadBuffer.setBackground(LBcolor);
+    	tomasuloUI.LoadBuffer.setBorder(LBborder);       
+    	tomasuloUI.frame.add(tomasuloUI.LoadBuffer);
+		tomasuloUI.frame.setLayout(null);
+
+		
+		
     	
     	readFile();
     	//输出待执行的指令集序列
