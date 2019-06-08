@@ -20,6 +20,8 @@ public class Simulator {
 	LoadBuffer[] loadBuffers;
 	//寄存器状态表
 	RegisterStatus[] registers;
+	//连接UI
+	Tomasulo superUI;
 	
 	
 	Instruction[] inst;	//指令集序列
@@ -93,21 +95,25 @@ public class Simulator {
 		return true;
 	}
 	
-	public void runSimulator(Instruction[] inst) {
+	public void runSimulator(Tomasulo tomasulo, Instruction[] inst) {
+		superUI = tomasulo;
 		this.inst = inst;
 		//System.out.println(inst[0].OprType);
-		while(true){
-			if(nextInstIndex >= inst.length && isFinished()) break;
+//		while(true){
+		if(nextInstIndex >= inst.length && isFinished()) {
+			printResult();
+			return;
+		}
 			//if(clock >= 22) break;
 			//计时器
-			clock ++;
-			System.out.println("-----------"+"Clock: "+clock+"-----------");
-			write();
-			exec();
-			issue();	
-			printRs();
-		}
-		printResult();
+		clock ++;
+		System.out.println("-----------"+"Clock: "+clock+"-----------");
+		write();
+		exec();
+		issue();	
+		printRs();
+//		}
+		return;
 	}
 	
 

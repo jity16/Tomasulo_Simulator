@@ -4,7 +4,7 @@ import java.awt.*;
 // loadBuffer部件
 public class LoadBufferUI extends JPanel{
 	GridLayout gridLayout;
-	JLabel[] labels;
+	public JLabel[] labels;
 	
 	public LoadBufferUI() {
 		super();

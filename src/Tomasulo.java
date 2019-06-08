@@ -18,9 +18,9 @@ public class Tomasulo {
 	
 	//UI
 	JFrame frame;
-	JPanel LoadBuffer;
+	LoadBufferUI LoadBufferPanel;
 
-	public static void setUIFont()
+	public static void setUIFont() //修改全局字体
 	{
 		Font f = new Font("Comic Sans MS",Font.PLAIN,25);
 		String   names[]={ "Label", "CheckBox", "PopupMenu","MenuItem", "CheckBoxMenuItem",
@@ -77,12 +77,12 @@ public class Tomasulo {
     	
     		
     	//LoadBuffer
-    	tomasuloUI.LoadBuffer = new LoadBufferUI();
-    	tomasuloUI.LoadBuffer.setSize(500,300);
-    	tomasuloUI.LoadBuffer.setLocation(LBpoint);
-    	tomasuloUI.LoadBuffer.setBackground(LBcolor);
-    	tomasuloUI.LoadBuffer.setBorder(LBborder);       
-    	tomasuloUI.frame.add(tomasuloUI.LoadBuffer);
+    	tomasuloUI.LoadBufferPanel = new LoadBufferUI();
+    	tomasuloUI.LoadBufferPanel.setSize(500,300);
+    	tomasuloUI.LoadBufferPanel.setLocation(LBpoint);
+    	tomasuloUI.LoadBufferPanel.setBackground(LBcolor);
+    	tomasuloUI.LoadBufferPanel.setBorder(LBborder);       
+    	tomasuloUI.frame.add(tomasuloUI.LoadBufferPanel);
 		tomasuloUI.frame.setLayout(null);
 
 		
@@ -117,12 +117,34 @@ public class Tomasulo {
     		}
     	}
 	
-    	tomasuloSimulator = new Simulator();
-    	tomasuloSimulator.runSimulator(inst);
+    	tomasuloUI.tomasuloSimulator = new Simulator();
+    	tomasuloUI.tomasuloSimulator.runSimulator(tomasuloUI,inst);
     	
+    	tomasuloUI.updateUI();
+    	
+
     	//为了防止编译运行不是新更新的版本,打上时间戳
     	SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//设置时间格式
         System.out.println("current system time : " +df.format(new Date()));// new Date()为获取当前系统时间
+    }
+    public void updateUI() {
+    	for(int i = 0 ; i < tomasuloSimulator.LoadRsNum;i++) {
+    		String Busy = null;
+    		if(tomasuloSimulator.loadBuffers[i].isBusy) {
+    			Busy = "Yes";
+    		}else {
+    			Busy = "No";
+    		}
+            LoadBufferPanel.labels[3*(i+1)+1].setText(Busy);
+            String loadAddr = null;
+            if(tomasuloSimulator.loadBuffers[i].isBusy) {
+            	loadAddr = Integer.toString(((LoadInstruction) tomasuloSimulator.loadBuffers[i].instruction).loadAddr);
+                
+            }else {
+            	loadAddr = null;
+            }
+            LoadBufferPanel.labels[3 * (i + 1) + 2].setText(loadAddr);
+    	}
     }
 }
 
