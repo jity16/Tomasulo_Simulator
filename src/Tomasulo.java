@@ -20,7 +20,7 @@ import javax.swing.JOptionPane;
 public class Tomasulo {
 	static List<String> StrInstList = new ArrayList<>();	//读入的指令集序列
 	static Simulator tomasuloSimulator;			//TomasuloSimulator
-	static String pathname = "test/test0.nel"; 
+	static String pathname = "test/test2.nel"; 
 	
 	//UI
 	JFrame frame;
