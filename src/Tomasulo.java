@@ -10,6 +10,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JLabel;
 import javax.swing.border.Border;
 
 import javax.swing.UIManager;
@@ -23,6 +24,7 @@ public class Tomasulo {
 	
 	//UI
 	JFrame frame;
+	JLabel SimName;
 	ClockUI controlPanel;
 	LoadBufferUI LoadBufferPanel;
 	RegisterUI   RegistersPanel;
@@ -68,15 +70,21 @@ public class Tomasulo {
     	
     	//各部件顶点位置
     	Point conPoint = new Point(100,50); //Control
-    	Point LBpoint = new Point(100,200); //LoadBuffer
+    	Point LBpoint = new Point(100,400); //LoadBuffer
     	Point RsPoint = new Point(1400,100); //RS
     	Point RegPoint = new Point(100,600); //Registers
     	Point CalPoint = new Point(550,200); //Calculator
+    	Point NamePoint = new Point(550,50); //Name
     	
+    	//标题字体
+    	Font NameFont = new Font("Comic Sans MS", Font.PLAIN, 70);
+    	//标题颜色
+    	Color NameColor = new java.awt.Color(255,218,185);
     	
     	
     	//各部件大小 per height = 50
     	Dimension windowSize = new Dimension(2000 , 1000);//frame
+    	Dimension NameSize = new Dimension(800,200);//NameSize
     	Dimension conSize = new Dimension(400,100);  //control
     	Dimension LBsize = new Dimension(400,200); //LoadBuffer
     	Dimension RegSize = new Dimension(1800,300);//Registers
@@ -107,6 +115,17 @@ public class Tomasulo {
     	tomasuloUI.frame.setSize(windowSize);
     	tomasuloUI.frame.getContentPane().setBackground(frameColor);
     	tomasuloUI.frame.setVisible(true);
+    	
+    	//SimName
+    	tomasuloUI.SimName = new JLabel("",JLabel.CENTER);
+    	tomasuloUI.SimName.setText("Tomasulo Simulator");
+    	tomasuloUI.SimName.setSize(NameSize);
+    	tomasuloUI.SimName.setLocation(NamePoint);
+    	tomasuloUI.SimName.setFont(NameFont);//设置JLabel的字体
+    	tomasuloUI.SimName.setForeground(NameColor);//设置文字的颜色
+    	tomasuloUI.frame.add(tomasuloUI.SimName);
+    	tomasuloUI.frame.setLayout(null);
+    	
     	
     	//Control
     	tomasuloUI.controlPanel = new ClockUI();
