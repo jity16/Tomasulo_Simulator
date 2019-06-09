@@ -1,17 +1,56 @@
-##### References
+#### Tomasulo_Simulator
 
-1. nel 文件读写：<https://blog.csdn.net/nickwong_/article/details/51502969>
-2. setUIFont: <https://blog.csdn.net/u010889616/article/details/50907865>
+* 本地使用的运行环境：
 
-#### Details
+  ~~~c
+  java version "1.8.0_191"
+  Java(TM) SE Runtime Environment (build 1.8.0_191-b12)
+  Java HotSpot(TM) 64-Bit Server VM (build 25.191-b12, mixed mode)
+  ~~~
 
-* 在本模拟器中默认除法指令如果发现除数为0，那么它就只需要执行1个周期。
+* 本地使用的编译器：
 
-##### UI
+  ~~~c
+  eclipse-jee-2019-03-R-win32-x86_64
+  ~~~
 
-一行16个register,要4行，17列
+  
 
-|       | F1   | F2   | F3   | F4   | F5   | F6   | F7   | F8   |
-| ----- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| State |      |      |      |      |      |      |      |      |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
