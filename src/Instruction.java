@@ -51,7 +51,9 @@ class LoadInstruction extends Instruction {
     }
 }
 class CalInstruction extends Instruction {
-	public int registerD, registerS1, registerS2;
+	public int registerD;
+	public int registerS1;
+	public int registerS2;
     CalInstruction(String[] inst){
         super(inst[0]);
         //Opr = getType(inst[0]);
