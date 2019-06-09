@@ -7,9 +7,9 @@ public class Simulator {
 	final int AddRsNum = 6, MultRsNum = 3, LoadRsNum = 3;
 	final int RegisterNum = 32;
 	//真实运行时间
-	final int LDTime = 3, ADDTime = 3, MULTime = 12, DIVTime = 40, JUMPTime = 1;
+	//final int LDTime = 3, ADDTime = 3, MULTime = 12, DIVTime = 40, JUMPTime = 1;
 	//测试运行时间
-	//final int LDTime = 3, ADDTime = 3, MULTime = 4, DIVTime = 4, JUMPTime = 1;
+	final int LDTime = 3, ADDTime = 3, MULTime = 4, DIVTime = 4, JUMPTime = 1;
 	//运算器部件
 	Calculator[] cadds;
 	Calculator[] cmults;
@@ -116,6 +116,8 @@ public class Simulator {
 		exec();
 		issue();	
 		printRs();
+		System.out.println("Registers");
+		printReg();
 //		}
 		superUI.updateUI(finishAllInst);
 		return;
@@ -780,6 +782,27 @@ public class Simulator {
 		}
 		for(int i = 0; i < MultRsNum; i ++) {
 			System.out.println("multRs "+ i + " "+ multRs[i].operation +" Qj = "+multRs[i].Qj +" Qk = "+multRs[i].Qk + " Vj ="+multRs[i].Vj + " Vk = "+ multRs[i].Vk);
+		}
+		for(int i = 0; i < LoadRsNum; i ++) {
+			if(loadBuffers[i].isBusy) {
+				System.out.println("LoadBuffer "+ i +" "+ loadBuffers[i].instruction.OprType.toString() + " isBusy = "+ loadBuffers[i].isBusy + " loadAddr = "+ Integer.toString(((LoadInstruction)loadBuffers[i].instruction).loadAddr));
+			}
+		}
+	}
+	
+	public void printReg() {
+		for(int i = 0 ; i < RegisterNum; i ++) {
+			if(registers[i].stateFunc != null) {
+				System.out.print("F"+i+ " "+registers[i].stateFunc+" ");
+			}
+		}
+		System.out.println();
+		for(int i = 0; i < 4; i ++) {
+			for(int j = 0 ; j < 8; j ++) {
+				int index = i *8 +j;
+				System.out.print("F"+ index+ " "+registers[index].value+" ");
+			}
+			System.out.println();
 		}
 	}
 	
