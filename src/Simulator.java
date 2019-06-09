@@ -7,9 +7,9 @@ public class Simulator {
 	final int AddRsNum = 6, MultRsNum = 3, LoadRsNum = 3;
 	final int RegisterNum = 32;
 	//真实运行时间
-	//final int LDTime = 3, ADDTime = 3, MULTime = 12, DIVTime = 40, JUMPTime = 1;
+	final int LDTime = 3, ADDTime = 3, MULTime = 12, DIVTime = 40, JUMPTime = 1;
 	//测试运行时间
-	final int LDTime = 3, ADDTime = 3, MULTime = 4, DIVTime = 4, JUMPTime = 1;
+	//final int LDTime = 3, ADDTime = 3, MULTime = 4, DIVTime = 4, JUMPTime = 1;
 	//运算器部件
 	Calculator[] cadds;
 	Calculator[] cmults;

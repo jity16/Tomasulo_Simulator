@@ -20,7 +20,7 @@ import javax.swing.JOptionPane;
 public class Tomasulo {
 	static List<String> StrInstList = new ArrayList<>();	//读入的指令集序列
 	static Simulator tomasuloSimulator;			//TomasuloSimulator
-	static String pathname = "test/test0.nel"; 
+	static String pathname = "test/test2.nel"; 
 	
 	//UI
 	JFrame frame;
@@ -30,6 +30,7 @@ public class Tomasulo {
 	RegisterUI   RegistersPanel;
 	ReservationUI ReserveStationPanel;
 	CalculatorUI CalculatorPanel;
+	InstInfoUI InstPanel;
 	
 
 	public static void setUIFont() //修改全局字体
@@ -72,9 +73,10 @@ public class Tomasulo {
     	Point conPoint = new Point(100,50); //Control
     	Point LBpoint = new Point(100,400); //LoadBuffer
     	Point RsPoint = new Point(1400,100); //RS
-    	Point RegPoint = new Point(100,600); //Registers
+    	Point RegPoint = new Point(100,650); //Registers
     	Point CalPoint = new Point(550,200); //Calculator
     	Point NamePoint = new Point(550,50); //Name
+    	Point InstPoint = new Point(100,200); //Inst
     	
     	//标题字体
     	Font NameFont = new Font("Comic Sans MS", Font.PLAIN, 70);
@@ -83,13 +85,14 @@ public class Tomasulo {
     	
     	
     	//各部件大小 per height = 50
-    	Dimension windowSize = new Dimension(2000 , 1000);//frame
+    	Dimension windowSize = new Dimension(2000 , 1200);//frame
     	Dimension NameSize = new Dimension(800,200);//NameSize
     	Dimension conSize = new Dimension(400,100);  //control
     	Dimension LBsize = new Dimension(400,200); //LoadBuffer
     	Dimension RegSize = new Dimension(1800,300);//Registers
     	Dimension RsSize = new Dimension(500,500); //RS
     	Dimension CalSize = new Dimension(800,400);//Calculator
+    	Dimension InstSize = new Dimension(400,150);//Inst
     	
     	//各部件背景颜色
     	Color frameColor = new java.awt.Color(240,248,255);
@@ -98,6 +101,7 @@ public class Tomasulo {
     	Color RegColor =  new java.awt.Color(230,230,250);
     	Color RsColor =  new java.awt.Color(230,230,250);
     	Color CalColor =  new java.awt.Color(230,230,250);
+    	Color InstColor =  new java.awt.Color(230,230,250);
     	
     	//边框颜色和线性
     	Color BoderColor = new java.awt.Color(70,130,180);
@@ -109,6 +113,7 @@ public class Tomasulo {
     	Border RegBorder = BorderFactory.createTitledBorder(borderline, "Register Status");
     	Border RsBorder = BorderFactory.createTitledBorder(borderline, "Reservation Station");
     	Border CalBorder = BorderFactory.createTitledBorder(borderline, "Calculators");
+    	Border InstBorder = BorderFactory.createTitledBorder(borderline, "Instruction Info");
     	
     	//总界面
     	tomasuloUI.frame = new JFrame("Tomasulo Simulator");
@@ -170,6 +175,15 @@ public class Tomasulo {
 		tomasuloUI.CalculatorPanel.setBackground(CalColor);
 		tomasuloUI.CalculatorPanel.setBorder(CalBorder); 
 		tomasuloUI.frame.add(tomasuloUI.CalculatorPanel);
+		tomasuloUI.frame.setLayout(null);
+		
+		//Inst info
+		tomasuloUI.InstPanel = new InstInfoUI();
+		tomasuloUI.InstPanel.setLocation(InstPoint);
+		tomasuloUI.InstPanel.setSize(InstSize);
+		tomasuloUI.InstPanel.setBackground(InstColor);
+		tomasuloUI.InstPanel.setBorder(InstBorder);
+		tomasuloUI.frame.add(tomasuloUI.InstPanel);
 		tomasuloUI.frame.setLayout(null);
 		
 		
@@ -307,7 +321,9 @@ public class Tomasulo {
     	String res = null;
     	switch(opr) {
     		case "LD":
-    			res = opr + " F"+Integer.toString(((LoadInstruction)tomasuloSimulator.cloads[i].instruction).registerNo)+" "+Integer.toString(((LoadInstruction)tomasuloSimulator.cloads[i].instruction).loadAddr);
+    			res = opr + 
+    				" F"+Integer.toString(((LoadInstruction)tomasuloSimulator.cloads[i].instruction).registerNo)+
+    				" "+Integer.toString(((LoadInstruction)tomasuloSimulator.cloads[i].instruction).loadAddr);
     			break;
     		case "ADD":
     		case "SUB":
@@ -379,11 +395,65 @@ public class Tomasulo {
     	
     }
     
+    public String getInstInfo(OperationType opr,int i) {
+    	String res = null;
+    	switch(opr) {
+    		case ADD:
+    		case SUB:
+    		case MUL:
+    		case DIV:
+    			res = opr.toString() + 
+    					" F"+Integer.toString(((CalInstruction)tomasuloSimulator.inst[i]).registerD)+
+    					" F"+Integer.toString(((CalInstruction)tomasuloSimulator.inst[i]).registerS1)+
+    					" F"+Integer.toString(((CalInstruction)tomasuloSimulator.inst[i]).registerS2);
+    			break;
+    		case LD:
+    			res = opr + 
+					" F"+Integer.toString(((LoadInstruction)tomasuloSimulator.inst[i]).registerNo)+
+					" "+Integer.toString(((LoadInstruction)tomasuloSimulator.inst[i]).loadAddr);
+    			break;
+    		case JUMP:
+    			res = opr +
+	    			" "+Integer.toString(((JumpInstruction)tomasuloSimulator.inst[i]).compare)+
+					" F"+Integer.toString(((JumpInstruction)tomasuloSimulator.inst[i]).registerNo)+
+					" "+Integer.toString(((JumpInstruction)tomasuloSimulator.inst[i]).jumpAddr);
+    			break;
+    		default:
+    	}
+    	return res;
+    }
+    
+    public void updateInstInfo() {
+    	StringBuffer issue =new StringBuffer();
+    	StringBuffer exec = new StringBuffer();
+    	StringBuffer write = new StringBuffer();
+    	int len = tomasuloSimulator.inst.length;
+    	for(int i = 0; i < len ;i ++) {
+    		int clock = tomasuloSimulator.clock;
+    		//Issue
+    		if(tomasuloSimulator.inst[i].issue == clock) {
+    			issue.append(getInstInfo(tomasuloSimulator.inst[i].OprType,i));
+    		}
+    		InstPanel.labels[0][1].setText(issue.toString());
+    		//Exec
+    		if(tomasuloSimulator.inst[i].exec == clock) {
+    			exec.append(getInstInfo(tomasuloSimulator.inst[i].OprType,i));
+    		}
+    		InstPanel.labels[1][1].setText(exec.toString());
+    		//Write
+    		if(tomasuloSimulator.inst[i].write == clock) {
+    			write.append(getInstInfo(tomasuloSimulator.inst[i].OprType,i));
+    		}
+    		InstPanel.labels[2][1].setText(write.toString());
+    	}
+    }
+    
     public void updateUI(boolean finished) {
     	updateLoadBuffer();
     	updateRegisters();
     	updateReservation();
     	updateCalculators();
+    	updateInstInfo();
 //    	if(finished) {
 //    		JOptionPane.showMessageDialog(null, "finished", "finished", JOptionPane.ERROR_MESSAGE);
 //    	}
